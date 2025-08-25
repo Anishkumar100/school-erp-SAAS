@@ -24,6 +24,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+
 app.use(cors({
   origin: "https://spark-erp-one.vercel.app",
   credentials: true,
@@ -40,20 +41,16 @@ app.get("/", (req, res) => {
   res.send("Spark Solutions Built this APP");
 });
 
-// Public route for school login/registration
 app.use("/api/school", schoolRouter);
+app.use("/api/student", studentRouter);
+app.use("/api/teacher", teacherRouter);
+app.use("/api/class", classRouter);
+app.use("/api/subject", subjectRouter);
+app.use("/api/examination", examRouter);
+app.use("/api/attendance", attendanceRoutes);
+app.use("/api/period", periodRoutes);
+app.use("/api/notices", noticeRoutes);
 
-// ✅ THE FIX: Apply the authCheck middleware to all protected routes
-app.use("/api/student", authCheck, studentRouter);
-app.use("/api/teacher", authCheck, teacherRouter);
-app.use("/api/class", authCheck, classRouter);
-app.use("/api/subject", authCheck, subjectRouter);
-app.use("/api/examination", authCheck, examRouter);
-app.use("/api/attendance", authCheck, attendanceRoutes);
-app.use("/api/period", authCheck, periodRoutes);
-app.use("/api/notices", authCheck, noticeRoutes);
-
-// This route is fine as is
 app.get("/api/auth/check", authCheck);
 
 const PORT = process.env.PORT || 3000;
