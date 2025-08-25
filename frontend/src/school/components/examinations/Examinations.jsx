@@ -185,217 +185,198 @@ setMessage(message)
     fetchAllSubjects();
   }, []);
 
-  return (
-    <>
-     {message && <CustomizedSnackbars reset={resetMessage} type={type} message={message}/>}
-       <Box><Typography className="hero-text" variant="h2" sx={{textAlign:"center"}}>Examinations</Typography></Box>
-      <Paper sx={{ margin: "10px", padding: "10px" }}>
-        <FormControl sx={{ minWidth: "220px", marginTop: "10px" }}>
-          <Typography>Change Class</Typography>
-          <Select
-            value={selectedClass}
-            onChange={handleClassChange}
-            onBlur={handleClassChange}
-          >
-            {allClasses &&
-              allClasses.map((value) => (
-                <MenuItem key={value._id} value={value._id}>
-                  {value.class_text}
-                </MenuItem>
-              ))}
-          </Select>
-        </FormControl>
-      </Paper>
+return (
+  <>
+    {message && (
+      <CustomizedSnackbars reset={resetMessage} type={type} message={message} />
+    )}
 
-      {examForm && (
-        <Paper sx={{ padding: "20px", margin: "10px" }}>
-          <Typography
-            sx={{
-              textAlign: "center",
-              textTransform: "capitalize",
-              fontWeight: "700",
-            }}
-            variant="h6"
-          >
-            Assign Examination
-          </Typography>
-          <Box
-            component="form"
-            noValidate
-            autoComplete="off"
-            onSubmit={examFormik.handleSubmit}
-          >
-            <Box component={"div"}>
+    <Box sx={{ mb: 3 }}>
+      <Typography variant="h2" sx={{ textAlign: "center", fontWeight: 600 }}>
+        Examinations
+      </Typography>
+    </Box>
+
+    <Paper
+      sx={{
+        px: 4,
+        py: 3,
+        mb: 4,
+        mx: "auto",
+        borderRadius: 4,
+        maxWidth: 1000,
+        boxShadow: 3,
+        transition: "transform 0.3s ease, box-shadow 0.3s ease",
+    "&:hover": {
+      transform: "scale(1.02)",
+      boxShadow: 6,
+    },
+      }}
+    >
+      <FormControl fullWidth>
+        <Typography variant="subtitle1" sx={{ mb: 1 }}>
+          Select Class:
+        </Typography>
+        <Select value={selectedClass} onChange={handleClassChange}>
+          {allClasses &&
+            allClasses.map((value) => (
+              <MenuItem key={value._id} value={value._id}>
+                {value.class_text}
+              </MenuItem>
+            ))}
+        </Select>
+      </FormControl>
+    </Paper>
+
+    {examForm && (
+      <Paper sx={{ p: 3, mb: 4, mx: "auto", borderRadius: 4, maxWidth: 1000, boxShadow: 3
+  }}>
+        <Typography variant="h6" sx={{ textAlign: "center", fontWeight: "bold", mb: 2 }}>
+          {isEditExam ? "Edit Examination" : "Assign Examination"}
+        </Typography>
+        <Box component="form" onSubmit={examFormik.handleSubmit} noValidate autoComplete="off">
+          <Grid container spacing={2}>
+            <Grid item xs={12} md={4}>
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DemoContainer components={["DatePicker"]}>
                   <DatePicker
                     label="Exam Date"
                     name="exam_date"
                     value={dayjs(examFormik.values.exam_date)}
-                    onChange={(e) => {
-                      console.log(e);
-                      //  setDate(dayjs(e))
-                      examFormik.setFieldValue("exam_date", dayjs(e));
-                    }}
+                    onChange={(e) => examFormik.setFieldValue("exam_date", dayjs(e))}
                   />
                 </DemoContainer>
               </LocalizationProvider>
-            </Box>
+            </Grid>
 
-            <FormControl sx={{ minWidth: "220px", marginTop: "10px" }}>
-              <InputLabel>Subject</InputLabel>
-              <Select
-                label="Subject"
-                name="subject"
-                onChange={examFormik.handleChange}
-                onBlur={examFormik.handleBlur}
-                value={examFormik.values.subject}
-              >
-                <MenuItem value={""}>Select Sub</MenuItem>
-                {allSubjects &&
-                  allSubjects.map((subject, i) => {
-                    return (
+            <Grid item xs={12} md={4}>
+              <FormControl fullWidth>
+                <InputLabel>Subject</InputLabel>
+                <Select
+                  label="Subject"
+                  name="subject"
+                  value={examFormik.values.subject}
+                  onChange={examFormik.handleChange}
+                  onBlur={examFormik.handleBlur}
+                >
+                  <MenuItem value="">Select Subject</MenuItem>
+                  {allSubjects &&
+                    allSubjects.map((subject, i) => (
                       <MenuItem key={i} value={subject._id}>
                         {subject.subject_name}
                       </MenuItem>
-                    );
-                  })}
-              </Select>
-            </FormControl>
-            {examFormik.touched.subject && examFormik.errors.subject && (
-              <p style={{ color: "red", textTransform: "capitalize" }}>
-                {examFormik.errors.subject}
-              </p>
-            )}
+                    ))}
+                </Select>
+                {examFormik.touched.subject && examFormik.errors.subject && (
+                  <Typography color="error" variant="caption">
+                    {examFormik.errors.subject}
+                  </Typography>
+                )}
+              </FormControl>
+            </Grid>
 
-            <TextField
-              fullWidth
-              sx={{ marginTop: "10px" }}
-              id="filled-basic"
-              label="Exam Type "
-              variant="outlined"
-              name="exam_type"
-              value={examFormik.values.exam_type}
-              onChange={examFormik.handleChange}
-              onBlur={examFormik.handleBlur}
-              placeholder="(1st Semister, 2nd Semister, Half yearly etc)"
-            />
-            {examFormik.touched.exam_type && examFormik.errors.exam_type && (
-              <p style={{ color: "red", textTransform: "capitalize" }}>
-                {examFormik.errors.exam_type}
-              </p>
-            )}
+            <Grid item xs={12} md={4}>
+              <TextField
+                fullWidth
+                label="Exam Type"
+                name="exam_type"
+                value={examFormik.values.exam_type}
+                onChange={examFormik.handleChange}
+                onBlur={examFormik.handleBlur}
+                placeholder="(1st Semester, Half yearly etc)"
+              />
+              {examFormik.touched.exam_type && examFormik.errors.exam_type && (
+                <Typography color="error" variant="caption">
+                  {examFormik.errors.exam_type}
+                </Typography>
+              )}
+            </Grid>
+          </Grid>
 
-            <Box sx={{ marginTop: "10px" }} component={"div"}>
-              <Button
-                type="submit"
-                sx={{ marginRight: "10px" }}
-                variant="contained"
-              >
-                Submit
-              </Button>
-              <Button
-                sx={{ background: "tomato", color: "#fff" }}
-                variant="contained"
-                onClick={cancelEditExam}
-              >
-                Cancel
-              </Button>
-            </Box>
+          <Box sx={{ mt: 3, display: "flex", gap: 2 }}>
+            <Button type="submit" variant="contained" color="primary">
+              Submit
+            </Button>
+            <Button variant="contained" sx={{ backgroundColor: "tomato" }} onClick={cancelEditExam}>
+              Cancel
+            </Button>
           </Box>
-        </Paper>
-      )}
-
-      <Paper sx={{ padding: "20px", margin: "10px" }}>
-        <Typography
-          sx={{ textAlign: "center" }}
-          className="text-beautify2"
-          variant="h5"
-        >
-          Examinations
-        </Typography>
-        <TableContainer component={Paper}>
-          <Table sx={{ minWidth: 250 }} aria-label="simple table">
-            <TableHead>
-              <TableRow>
-                <TableCell sx={{ fontWeight: "700" }} align="left">
-                  Exam Date
-                </TableCell>
-                <TableCell sx={{ fontWeight: "700" }} align="left">
-                  Subject
-                </TableCell>
-                <TableCell sx={{ fontWeight: "700" }} align="center">
-                  Exam Type
-                </TableCell>
-                <TableCell sx={{ fontWeight: "700" }} align="center">
-                  Actions
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {examinations &&
-                examinations.map((examination, i) => {
-                  return (
-                    <TableRow key={i}>
-                      <TableCell component="th" scope="row">
-                        {convertDate(examination.examDate)}
-                      </TableCell>
-                      <TableCell align="left">
-                        {examination.subject?examination.subject.subject_name:"Add One"}
-                      </TableCell>
-                      <TableCell align="center">
-                        {examination.examType}
-                      </TableCell>
-                      <TableCell sx={{ fontWeight: "700" }} align="center">
-                        <Box
-                          component={"div"}
-                          sx={{
-                            bottom: 0,
-                            display: "flex",
-                            justifyContent: "end",
-                          }}
-                        >
-                          <Button
-                            variant="contained"
-                            sx={{ background: "red", color: "#fff" }}
-                            onClick={() => {
-                              handleDeleteExam(examination._id);
-                            }}
-                          >
-                            Delete
-                          </Button>
-                          <Button
-                            variant="contained"
-                            sx={{
-                              background: "gold",
-                              color: "#222222",
-                            }}
-                            onClick={() => {
-                              handleEditExam(examination._id);
-                            }}
-                          >
-                            Edit
-                          </Button>
-                        </Box>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            marginTop: "10px",
-          }}
-        >
-          <Button variant="contained" onClick={handleNewExam}>
-            Add Exam
-          </Button>
         </Box>
       </Paper>
-    </>
-  );
+    )}
+
+    <Paper
+      sx={{
+        p: 3,
+        mb: 5,
+        mx: "auto",
+        borderRadius: 4,
+        maxWidth: 1000,
+        boxShadow: 3,
+        transition: "transform 0.3s ease, box-shadow 0.3s ease",
+    "&:hover": {
+      transform: "scale(1.02)",
+      boxShadow: 6,
+    },
+      }}
+    >
+      <Typography variant="h5" sx={{ textAlign: "center", mb: 2, fontWeight: 600 }}>
+        Examinations
+      </Typography>
+
+      <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell sx={{ fontWeight: 700 }}>Exam Date</TableCell>
+              <TableCell sx={{ fontWeight: 700 }}>Subject</TableCell>
+              <TableCell sx={{ fontWeight: 700 }} align="center">
+                Exam Type
+              </TableCell>
+              <TableCell sx={{ fontWeight: 700 }} align="center">
+                Actions
+              </TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {examinations &&
+              examinations.map((examination, i) => (
+                <TableRow key={i}>
+                  <TableCell>{convertDate(examination.examDate)}</TableCell>
+                  <TableCell>
+                    {examination.subject ? examination.subject.subject_name : "Add One"}
+                  </TableCell>
+                  <TableCell align="center">{examination.examType}</TableCell>
+                  <TableCell align="center">
+                    <Box sx={{ display: "flex", justifyContent: "center", gap: 1 }}>
+                      <Button
+                        variant="contained"
+                        sx={{ backgroundColor: "red", color: "#fff" }}
+                        onClick={() => handleDeleteExam(examination._id)}
+                      >
+                        Delete
+                      </Button>
+                      <Button
+                        variant="contained"
+                        sx={{ backgroundColor: "gold", color: "#000" }}
+                        onClick={() => handleEditExam(examination._id)}
+                      >
+                        Edit
+                      </Button>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      <Box sx={{ mt: 3, display: "flex", justifyContent: "center" }}>
+        <Button variant="contained" onClick={handleNewExam}>
+          + Add Exam
+        </Button>
+      </Box>
+    </Paper>
+  </>
+);
 }

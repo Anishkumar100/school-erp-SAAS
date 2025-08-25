@@ -2,10 +2,14 @@ const Notice = require("../model/notice.model");
 
 // Route to add a new notice
 exports.newNotice = async (req, res) => {
-  const { title, message, audience} = req.body;
+  let { title, message, audience } = req.body;
   const schoolId = req.user.schoolId;
+
   try {
-    const newNotice = new Notice({ title, message, audience, school:schoolId });
+    // If audience is "all", store as an array
+    if (audience === "all") audience = ["student", "teacher"];
+
+    const newNotice = new Notice({ title, message, audience, school: schoolId });
     await newNotice.save();
     res.status(201).json({ message: "Notice added successfully!" });
   } catch (error) {
@@ -14,18 +18,20 @@ exports.newNotice = async (req, res) => {
   }
 };
 
-// Route to fetch notices for a specific audience (e.g., 'student' or 'teacher')
 exports.fetchAudiance = async (req, res) => {
   const { audience } = req.params;
   const schoolId = req.user.schoolId;
   try {
-    const notices = await Notice.find({ audience,school:schoolId });
+    let query = { school: schoolId };
+    if (audience !== "all") query.audience = audience;
+    const notices = await Notice.find(query);
     res.json(notices);
   } catch (error) {
     console.error("Error fetching notices:", error);
     res.status(500).json({ message: "Error fetching notices." });
   }
 };
+
 
 exports.fetchAllAudiance = async (req, res) => {
   const schoolId = req.user.schoolId;

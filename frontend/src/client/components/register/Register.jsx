@@ -1,149 +1,223 @@
-import { Box, Button, CardMedia, FormControl, InputLabel, MenuItem, Paper, Select, TextField, Typography } from "@mui/material";
+import { Box, Button, CardMedia, TextField, Typography, Paper } from "@mui/material";
 import { useFormik } from "formik";
 import { registerSchema } from "../../../yupSchema/registerSchema";
 import { useState } from "react";
 import axios from "axios";
 import { baseUrl } from "../../../environment";
 import CustomizedSnackbars from "../../../basic utility components/CustomizedSnackbars";
-import './Register.css'
+import { useNavigate } from "react-router-dom";
+import './Register.css';
 
 export default function Register() {
-    const [message, setMessage] =  useState("");
-    const [type, setType]= useState("succeess");
+    const [message, setMessage] = useState("");
+    const [type, setType] = useState("success");
+    const [file, setFile] = useState(null);
+    const [imageUrl, setImageUrl] = useState(null);
+    const navigate = useNavigate()
 
-const [file, setFile] =useState(null);
-const [imageUrl, setImageUrl] = useState(null)
-const addImage =(event)=>{
-    const file = event.target.files[0];
-    setImageUrl(URL.createObjectURL(file))
-    console.log("Image",file,event.target.value)
-    setFile(file)
-}
+    const addImage = (event) => {
+        const file = event.target.files[0];
+        setImageUrl(URL.createObjectURL(file));
+        setFile(file);
+    };
 
-const resetMessage  =()=>{
-    setMessage("")
-}
+    const resetMessage = () => {
+        setMessage("");
+    };
 
     const initialValues = {
-        school_name:"",
+        school_name: "",
         email: "",
-        owner_name:"",
-        password:"",
-        confirm_password:""
-    }
+        owner_name: "",
+        password: "",
+        confirm_password: ""
+    };
+
     const Formik = useFormik({
         initialValues: initialValues,
         validationSchema: registerSchema,
         onSubmit: (values) => {
-            console.log("Register Formik values", values)
-         
-            if(file){
+            if (file) {
                 const fd = new FormData();
-                fd.append("image",file,  file.name);
-                fd.append("school_name",values.school_name)
-                fd.append("email",values.email)
-                fd.append("owner_name",values.owner_name)
-                fd.append("password", values.password)
-               
-                axios.post(`${baseUrl}/school/register`,fd).then(resp=>{
-                    console.log("Response register submit")
+                fd.append("image", file, file.name);
+                fd.append("school_name", values.school_name);
+                fd.append("email", values.email);
+                fd.append("owner_name", values.owner_name);
+                fd.append("password", values.password);
+
+                axios.post(`${baseUrl}/school/register`, fd).then(resp => {
                     setMessage(resp.data.message);
-                    setType("success")
-                    setFile(null)
-                    Formik.resetForm()
-                }).catch(e=>{
+                    setType("success");
+                    setFile(null);
+                    Formik.resetForm();
+                    setTimeout(() => {
+                        navigate("/");
+                    }, 2000); // waits 2 seconds before redirect
+                }).catch(e => {
                     setMessage(e.response.data.message);
-                    setType("error")
-                    console.log("Error in  register submit", e.response.data.message)
-                })
-            }else{
+                    setType("error");
+                });
+            } else {
                 setMessage("Please Provide An Image.");
-                setType("error")
+                setType("error");
             }
-            
         }
-    })
+    });
 
-    return (<Box component={'div'} sx={{width:"100%", minHeight:"80vh", background:"url(https://cdn.pixabay.com/photo/2017/08/12/21/42/back2school-2635456_1280.png)", backgroundSize:"cover"}}>
+    return (
+        <Box
+            component={'div'}
+            sx={{
+                width: "100%",
+                minHeight: "100vh",
+                background: "linear-gradient(to bottom, #320e3b, #6c0ba9)",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                padding: 2,
+            }}
+        >
+            {message && <CustomizedSnackbars reset={resetMessage} type={type} message={message} />}
 
-<Box component={'div'} sx={{padding:'40px',maxWidth:"700px",margin:"auto"}} > 
-    {message && <CustomizedSnackbars reset={resetMessage} type={type} message={message}/>}
-        <Box sx={{ display: 'flex', justifyContent: "center", alignItems: "center", }} component={'div'}>
-            <Typography variant="h3">Register School</Typography>
-        </Box>
-        <Paper  sx={{ padding: "20px", margin: "10px",minWidth:'320px' }}>
-            <Box
-                component="form"
-                noValidate
-                autoComplete="off"
-                onSubmit={Formik.handleSubmit}
-
+            <Paper
+                elevation={6}
+                sx={{
+                    borderRadius: "20px",
+                    padding: "30px",
+                    width: "100%",
+                    maxWidth: "400px",
+                    position: "relative",
+                    backgroundColor: "rgba(255, 255, 255, 0.95)",
+                    textAlign: "center"
+                }}
             >
-
-                <Box component={'div'} sx={{display:"flex", flexDirection:"row",
-                    flexWrap:"wrap", alignItems:"center"}}>
-                    <Typography style={{marginRight:"50px"}}  variant="h4">Add School Picture</Typography>
-                    <TextField  sx={{ marginTop: "10px" }} id="filled-basic"
-                    variant="outlined" name="file"
-                    type="file"
-                    onChange={(event)=>{
-                        addImage(event)
-                    }}/>
-
-                    {file && <Box sx={{position:"relative"}} component={'div'}>
-                           <CardMedia component={'img'} image={imageUrl} height={'240px'} />
-                    </Box>}
-                   
-              
+                {/* Decorative face */}
+                <Box
+                    sx={{
+                        position: "absolute",
+                        top: "-30px",
+                        left: "50%",
+                        transform: "translateX(-50%)",
+                        width: "100px",
+                        height: "100px",
+                        background: "linear-gradient(to bottom, #a600ff, #d17aff)",
+                        borderRadius: "50%",
+                        zIndex: 1,
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center"
+                    }}
+                >
+                    <Box sx={{ width: "10px", height: "10px", background: "#000", borderRadius: "50%", margin: "4px" }} />
+                    <Box sx={{ width: "10px", height: "10px", background: "#000", borderRadius: "50%", margin: "4px" }} />
+                    <Box sx={{ width: "6px", height: "6px", background: "#000", borderRadius: "50%", margin: "2px" }} />
                 </Box>
-                
 
-             <TextField fullWidth sx={{ marginTop: "10px" }} id="filled-basic"
-                    label="School Name " variant="outlined" name="school_name"
-                    value={Formik.values.school_name}
-                    onChange={Formik.handleChange}
-                    onBlur={Formik.handleBlur} />
-                {Formik.touched.school_name && Formik.errors.school_name&& <p style={{ color: "red", textTransform: "capitalize" }}>
-                    {Formik.errors.school_name}</p>}
+                <Typography variant="h5" sx={{ marginTop: "60px", fontWeight: "bold", color: "#333" }}>
+                    Register School
+                </Typography>
 
-                <TextField fullWidth sx={{ marginTop: "10px" }} id="outlined-basic"
-                    label="Email" variant="outlined"
-                    name="email"
-                    value={Formik.values.email}
-                    onChange={Formik.handleChange}
-                    onBlur={Formik.handleBlur} />
-                {Formik.touched.email && Formik.errors.email && <p style={{ color: "red", textTransform: "capitalize" }}>{Formik.errors.email}</p>}
+                <Box component="form" noValidate autoComplete="off" onSubmit={Formik.handleSubmit}>
+                    <TextField
+                        fullWidth
+                        sx={{ marginTop: 2 }}
+                        label="School Name"
+                        variant="outlined"
+                        name="school_name"
+                        value={Formik.values.school_name}
+                        onChange={Formik.handleChange}
+                        onBlur={Formik.handleBlur}
+                    />
+                    {Formik.touched.school_name && Formik.errors.school_name && (
+                        <p style={{ color: "red" }}>{Formik.errors.school_name}</p>
+                    )}
 
+                    <TextField
+                        fullWidth
+                        sx={{ marginTop: 2 }}
+                        label="Email"
+                        variant="outlined"
+                        name="email"
+                        value={Formik.values.email}
+                        onChange={Formik.handleChange}
+                        onBlur={Formik.handleBlur}
+                    />
+                    {Formik.touched.email && Formik.errors.email && (
+                        <p style={{ color: "red" }}>{Formik.errors.email}</p>
+                    )}
 
-                <TextField fullWidth sx={{ marginTop: "10px" }} id="filled-basic"
-                    label="Your Name " variant="outlined" name="owner_name"
-                    value={Formik.values.owner_name}
-                    onChange={Formik.handleChange}
-                    onBlur={Formik.handleBlur} />
-                {Formik.touched.owner_name && Formik.errors.owner_name&& <p style={{ color: "red", textTransform: "capitalize" }}>
-                    {Formik.errors.owner_name}</p>}
+                    <TextField
+                        fullWidth
+                        sx={{ marginTop: 2 }}
+                        label="Your Name"
+                        variant="outlined"
+                        name="owner_name"
+                        value={Formik.values.owner_name}
+                        onChange={Formik.handleChange}
+                        onBlur={Formik.handleBlur}
+                    />
+                    {Formik.touched.owner_name && Formik.errors.owner_name && (
+                        <p style={{ color: "red" }}>{Formik.errors.owner_name}</p>
+                    )}
 
-                    <TextField fullWidth sx={{ marginTop: "10px" }} id="filled-basic"
-                    label="Password"
-                    type="password" variant="outlined" name="password"
-                    value={Formik.values.password}
-                    onChange={Formik.handleChange}
-                    onBlur={Formik.handleBlur} />
-                {Formik.touched.password && Formik.errors.password && <p style={{ color: "red", textTransform: "capitalize" }}>{Formik.errors.password}</p>}
+                    <TextField
+                        fullWidth
+                        sx={{ marginTop: 2 }}
+                        label="Password"
+                        type="password"
+                        variant="outlined"
+                        name="password"
+                        value={Formik.values.password}
+                        onChange={Formik.handleChange}
+                        onBlur={Formik.handleBlur}
+                    />
+                    {Formik.touched.password && Formik.errors.password && (
+                        <p style={{ color: "red" }}>{Formik.errors.password}</p>
+                    )}
 
-                <TextField fullWidth sx={{ marginTop: "10px" }} id="filled-basic"
-                    label="Confirm Password"
-                    type="password" variant="outlined" name="confirm_password"
-                    value={Formik.values.confirm_password}
-                    onChange={Formik.handleChange}
-                    onBlur={Formik.handleBlur} />
-                {Formik.touched.confirm_password && Formik.errors.confirm_password && <p style={{ color: "red", textTransform: "capitalize" }}>{Formik.errors.confirm_password}</p>}
+                    <TextField
+                        fullWidth
+                        sx={{ marginTop: 2 }}
+                        label="Confirm Password"
+                        type="password"
+                        variant="outlined"
+                        name="confirm_password"
+                        value={Formik.values.confirm_password}
+                        onChange={Formik.handleChange}
+                        onBlur={Formik.handleBlur}
+                    />
+                    {Formik.touched.confirm_password && Formik.errors.confirm_password && (
+                        <p style={{ color: "red" }}>{Formik.errors.confirm_password}</p>
+                    )}
 
-                <Box sx={{ marginTop: "10px" }} component={'div'}>
-                    <Button type="submit" sx={{ marginRight: "10px" }} variant="contained">Submit</Button>
+                    <Box sx={{ marginTop: 2 }}>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={addImage}
+                            style={{ marginBottom: 10 }}
+                        />
+                        {file && (
+                            <CardMedia component="img" height="150" image={imageUrl} alt="Preview" />
+                        )}
+                    </Box>
+
+                    <Button
+                        type="submit"
+                        variant="contained"
+                        sx={{
+                            backgroundColor: "#1976d2",
+                            color: "#fff",
+                            marginTop: 2,
+                            borderRadius: "10px",
+                            width: "100%"
+                        }}
+                    >
+                        Submit
+                    </Button>
                 </Box>
-            </Box>
-        </Paper>
+            </Paper>
         </Box>
-    </Box>)
+    );
 }

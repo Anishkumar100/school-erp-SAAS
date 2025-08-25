@@ -198,250 +198,277 @@ export default function Students() {
           message={message}
         />
       )}
+
       <Box sx={{ padding: "40px 10px 20px 10px" }}>
-        <Box sx={{ display: "flex", justifyContent: "center" }} component="div">
+        <Box sx={{ display: "flex", justifyContent: "center" }}>
           <Typography variant="h2">Students</Typography>
         </Box>
 
-        <Box sx={{ padding: "40px" }}>
-          <Paper sx={{ padding: "20px", margin: "10px" }}>
-            <Typography
-              variant="h4"
-              sx={{ fontWeight: "800", textAlign: "center" }}
-            >
-              {isEdit ? "Edit Student" : "Add New Student"}
-            </Typography>
-
-            <Box
-              component="form"
-              noValidate
-              autoComplete="off"
-              onSubmit={Formik.handleSubmit}
-            >
-              <Box
-                sx={{
-                  display: "flex",
-                  flexDirection: "row",
-                  alignItems: "center",
-                }}
+        {/* Centered Add Student Form */}
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
+          <Box sx={{ width: "100%", maxWidth: 600 }}>
+            <Paper sx={{ padding: "20px", borderRadius: "20px" }}>
+              <Typography
+                variant="h4"
+                sx={{ fontWeight: "800", textAlign: "center" }}
               >
-                <Typography sx={{ marginRight: "50px" }} variant="h4">
-                  Student Pic
-                </Typography>
-                <TextField
-                  sx={{ marginTop: "10px" }}
-                  id="filled-basic"
-                  variant="outlined"
-                  name="file"
-                  type="file"
-                  onChange={addImage}
-                  inputRef={fileInputRef}
-                />
+                {isEdit ? "Edit Student" : "Add New Student"}
+              </Typography>
 
+              {/* === Your Formik Form (no changes) === */}
+              <Box
+                component="form"
+                noValidate
+                autoComplete="off"
+                onSubmit={Formik.handleSubmit}
+              >
+                {/* Image input and preview */}
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                    mt: 2,
+                  }}
+                >
+                  <Typography sx={{ marginRight: "20px" }} variant="h6">
+                    Student Pic
+                  </Typography>
+                  <TextField
+                    id="filled-basic"
+                    variant="outlined"
+                    name="file"
+                    type="file"
+                    onChange={addImage}
+                    inputRef={fileInputRef}
+                  />
+                </Box>
                 {imageUrl && (
-                  <Box sx={{ position: "relative" }}>
-                    <CardMedia
-                      component="img"
-                      image={imageUrl}
-                      height="240px"
-                    />
+                  <Box sx={{ position: "relative", mt: 2 }}>
+                    <CardMedia component="img" image={imageUrl} height="240px" />
                   </Box>
                 )}
-              </Box>
-               {/* Other input fields go here */}
-               <TextField
-                fullWidth
-                sx={{ marginTop: "10px" }}
-                id="filled-basic"
-                label="email "
-                variant="outlined"
-                name="email"
-                value={Formik.values.email}
-                onChange={Formik.handleChange}
-                onBlur={Formik.handleBlur}
-              />
-              {Formik.touched.email && Formik.errors.email && (
-                <p style={{ color: "red", textTransform: "capitalize" }}>
-                  {Formik.errors.email}
-                </p>
-              )}
 
-              <TextField
-                fullWidth
-                sx={{ marginTop: "10px" }}
-                id="filled-basic"
-                label="name "
-                variant="outlined"
-                name="name"
-                value={Formik.values.name}
-                onChange={Formik.handleChange}
-                onBlur={Formik.handleBlur}
-              />
-              {Formik.touched.name && Formik.errors.name && (
-                <p style={{ color: "red", textTransform: "capitalize" }}>
-                  {Formik.errors.name}
-                </p>
-              )}
-
-              <FormControl sx={{ minWidth: "220px", marginTop: "10px" }}>
-                <InputLabel id="demo-simple-select-label">Class</InputLabel>
-                <Select
-                  labelId="demo-simple-select-label"
-                  id="demo-simple-select"
-                  label="Class"
-                  name="student_class"
+                {/* === Other Fields (no changes to structure) === */}
+                <TextField
+                  fullWidth
+                  sx={{ mt: 2 }}
+                  label="email"
+                  name="email"
+                  variant="outlined"
+                  value={Formik.values.email}
                   onChange={Formik.handleChange}
                   onBlur={Formik.handleBlur}
-                  value={Formik.values.student_class}
-                >
-                  {studentClass &&
-                    studentClass.map((value, i) => {
-                      return (
+                />
+                {Formik.touched.email && Formik.errors.email && (
+                  <p style={{ color: "red", textTransform: "capitalize" }}>
+                    {Formik.errors.email}
+                  </p>
+                )}
+
+                <TextField
+                  fullWidth
+                  sx={{ mt: 2 }}
+                  label="name"
+                  name="name"
+                  variant="outlined"
+                  value={Formik.values.name}
+                  onChange={Formik.handleChange}
+                  onBlur={Formik.handleBlur}
+                />
+                {Formik.touched.name && Formik.errors.name && (
+                  <p style={{ color: "red", textTransform: "capitalize" }}>
+                    {Formik.errors.name}
+                  </p>
+                )}
+
+                <FormControl fullWidth sx={{ mt: 2 }}>
+                  <InputLabel>Class</InputLabel>
+                  <Select
+                    name="student_class"
+                    value={Formik.values.student_class}
+                    onChange={Formik.handleChange}
+                    onBlur={Formik.handleBlur}
+                  >
+                    {studentClass &&
+                      studentClass.map((value, i) => (
                         <MenuItem key={i} value={value._id}>
                           {value.class_text}
                         </MenuItem>
-                      );
-                    })}
-                </Select>
-              </FormControl>
-              {Formik.touched.student_class && Formik.errors.student_class && (
-                <p style={{ color: "red", textTransform: "capitalize" }}>
-                  {Formik.errors.student_class}
-                </p>
-              )}
+                      ))}
+                  </Select>
+                </FormControl>
+                {Formik.touched.student_class && Formik.errors.student_class && (
+                  <p style={{ color: "red", textTransform: "capitalize" }}>
+                    {Formik.errors.student_class}
+                  </p>
+                )}
 
-              <br />
-              <FormControl sx={{ minWidth: "220px", marginTop: "10px" }}>
-                <InputLabel id="demo-simple-select-label">Gender</InputLabel>
-                <Select
-                  labelId="demo-simple-select-label"
-                  id="demo-simple-select"
-                  label="Gender"
-                  name="gender"
+                <FormControl fullWidth sx={{ mt: 2 }}>
+                  <InputLabel>Gender</InputLabel>
+                  <Select
+                    name="gender"
+                    value={Formik.values.gender}
+                    onChange={Formik.handleChange}
+                    onBlur={Formik.handleBlur}
+                  >
+                    <MenuItem value="">Select Gender</MenuItem>
+                    <MenuItem value="male">Male</MenuItem>
+                    <MenuItem value="female">Female</MenuItem>
+                    <MenuItem value="other">Other</MenuItem>
+                  </Select>
+                </FormControl>
+                {Formik.touched.gender && Formik.errors.gender && (
+                  <p style={{ color: "red", textTransform: "capitalize" }}>
+                    {Formik.errors.gender}
+                  </p>
+                )}
+
+                <TextField
+                  fullWidth
+                  sx={{ mt: 2 }}
+                  label="Age"
+                  name="age"
+                  variant="outlined"
+                  value={Formik.values.age}
                   onChange={Formik.handleChange}
                   onBlur={Formik.handleBlur}
-                  value={Formik.values.gender}
-                >
-                  <MenuItem value={""}>Select Gender</MenuItem>
-                  <MenuItem value={"male"}>Male</MenuItem>
-                  <MenuItem value={"female"}>Female</MenuItem>
-                  <MenuItem value={"other"}>Other</MenuItem>
-                </Select>
-              </FormControl>
-              {Formik.touched.gender && Formik.errors.gender && (
-                <p style={{ color: "red", textTransform: "capitalize" }}>
-                  {Formik.errors.gender}
-                </p>
-              )}
+                />
+                {Formik.touched.age && Formik.errors.age && (
+                  <p style={{ color: "red", textTransform: "capitalize" }}>
+                    {Formik.errors.age}
+                  </p>
+                )}
 
-              <TextField
-                fullWidth
-                sx={{ marginTop: "10px" }}
-                id="filled-basic"
-                label="Age "
-                variant="outlined"
-                name="age"
-                value={Formik.values.age}
-                onChange={Formik.handleChange}
-                onBlur={Formik.handleBlur}
-              />
-              {Formik.touched.age && Formik.errors.age && (
-                <p style={{ color: "red", textTransform: "capitalize" }}>
-                  {Formik.errors.age}
-                </p>
-              )}
+                <TextField
+                  fullWidth
+                  sx={{ mt: 2 }}
+                  label="Guardian"
+                  name="guardian"
+                  variant="outlined"
+                  value={Formik.values.guardian}
+                  onChange={Formik.handleChange}
+                  onBlur={Formik.handleBlur}
+                />
+                {Formik.touched.guardian && Formik.errors.guardian && (
+                  <p style={{ color: "red", textTransform: "capitalize" }}>
+                    {Formik.errors.guardian}
+                  </p>
+                )}
 
-              <TextField
-                fullWidth
-                sx={{ marginTop: "10px" }}
-                id="filled-basic"
-                label="Guardian "
-                variant="outlined"
-                name="guardian"
-                value={Formik.values.guardian}
-                onChange={Formik.handleChange}
-                onBlur={Formik.handleBlur}
-              />
-              {Formik.touched.guardian && Formik.errors.guardian && (
-                <p style={{ color: "red", textTransform: "capitalize" }}>
-                  {Formik.errors.guardian}
-                </p>
-              )}
-
-              <TextField
-                fullWidth
-                sx={{ marginTop: "10px" }}
-                id="filled-basic"
-                label="Guardian Phone "
-                variant="outlined"
-                name="guardian_phone"
-                value={Formik.values.guardian_phone}
-                onChange={Formik.handleChange}
-                onBlur={Formik.handleBlur}
-              />
-              {Formik.touched.guardian_phone &&
-                Formik.errors.guardian_phone && (
+                <TextField
+                  fullWidth
+                  sx={{ mt: 2 }}
+                  label="Guardian Phone"
+                  name="guardian_phone"
+                  variant="outlined"
+                  value={Formik.values.guardian_phone}
+                  onChange={Formik.handleChange}
+                  onBlur={Formik.handleBlur}
+                />
+                {Formik.touched.guardian_phone && Formik.errors.guardian_phone && (
                   <p style={{ color: "red", textTransform: "capitalize" }}>
                     {Formik.errors.guardian_phone}
                   </p>
                 )}
 
-{!isEdit && (
-                <>
-                  <TextField
-                    fullWidth
-                    sx={{ marginTop: "10px" }}
-                    id="filled-basic"
-                    label="Password "
-                    variant="outlined"
-                    name="password"
-                    value={Formik.values.password}
-                    onChange={Formik.handleChange}
-                    onBlur={Formik.handleBlur}
-                  />
-                  {Formik.touched.password && Formik.errors.password && (
-                    <p style={{ color: "red", textTransform: "capitalize" }}>
-                      {Formik.errors.password}
-                    </p>
-                  )}
-                </>
-              )}
-              
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
-                color="primary"
-                sx={{ marginTop: "10px" }}
-              >
-                {isEdit ? "Update Student" : "Register Student"}
-              </Button>
-              {isEdit && (
+                {!isEdit && (
+                  <>
+                    <TextField
+                      fullWidth
+                      sx={{ mt: 2 }}
+                      label="Password"
+                      name="password"
+                      variant="outlined"
+                      value={Formik.values.password}
+                      onChange={Formik.handleChange}
+                      onBlur={Formik.handleBlur}
+                    />
+                    {Formik.touched.password && Formik.errors.password && (
+                      <p style={{ color: "red", textTransform: "capitalize" }}>
+                        {Formik.errors.password}
+                      </p>
+                    )}
+                  </>
+                )}
+
                 <Button
+                  type="submit"
                   fullWidth
-                  onClick={cancelEdit}
-                  variant="outlined"
-                  sx={{ marginTop: "10px" }}
+                  variant="contained"
+                  color="primary"
+                  sx={{ mt: 2 }}
                 >
-                  Cancel
+                  {isEdit ? "Update Student" : "Register Student"}
                 </Button>
-              )}
-            </Box>
-          </Paper>
+
+                {isEdit && (
+                  <Button
+                    fullWidth
+                    onClick={cancelEdit}
+                    variant="outlined"
+                    sx={{ mt: 1 }}
+                  >
+                    Cancel
+                  </Button>
+                )}
+              </Box>
+            </Paper>
+          </Box>
         </Box>
 
-        <Box sx={{ padding: "40px", display: "flex", flexWrap: "wrap" }}>
-          {students.length > 0 &&
-            students.map((value, i) => (
-              <StudentCardAdmin
-                key={i}
-                student={value}
-                handleDelete={handleDelete}
-                handleEdit={handleEdit}
-              />
-            ))}
+        {/* Filters Section */}
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 3, gap: 2, flexWrap: "wrap" }}>
+          {/* Search Field */}
+          <TextField
+            label="Search Students"
+            variant="outlined"
+            onChange={handleSearch}
+            sx={{ minWidth: 250 }}
+          />
+
+          {/* Class Filter */}
+          <FormControl sx={{ minWidth: 200 }}>
+            <InputLabel>Filter by Class</InputLabel>
+            <Select
+              value={params.student_class || ""}
+              onChange={handleClass}
+            >
+              <MenuItem value="">All Classes</MenuItem>
+              {studentClass.map((value, i) => (
+                <MenuItem key={i} value={value._id}>
+                  {value.class_text}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
+
+
+        {/* Student Cards in Flickable (Scrollable) Row */}
+        <Box sx={{ mt: 5, overflowX: "auto" }}>
+          <Box
+            sx={{
+              display: "flex",
+              gap: "20px",
+              width: "max-content",
+              padding: "10px",
+            }}
+          >
+            {students.length > 0 &&
+              students.map((value, i) => (
+                <StudentCardAdmin
+                  key={i}
+                  student={value}
+                  handleDelete={handleDelete}
+                  handleEdit={handleEdit}
+                />
+              ))}
+          </Box>
         </Box>
       </Box>
     </>
   );
+
 }

@@ -123,27 +123,57 @@ const Schedule = () => {
 
 
   return (
-    <Container>
-       <Typography className="hero-text" variant="h2" sx={{textAlign:"center"}}>Weekly Schedule</Typography>
+  <Container>
+    <Typography className="hero-text" variant="h2" sx={{ textAlign: 'center' }}>
+      Weekly Schedule
+    </Typography>
 
-      <Paper sx={{ margin: '10px', padding: '10px' }}>
-        <FormControl sx={{ minWidth: '220px', marginTop: '10px' }}>
-          <Typography >Change Class</Typography>
-          <Select  value={selectedClass} onChange={handleClassChange} onBlur={handleClassChange}>
-            {allClasses &&
-              allClasses.map((value) => (
-                <MenuItem key={value._id} value={value._id}>
-                  {value.class_text}
-                </MenuItem>
-              ))}
-          </Select>
-        </FormControl>
-      </Paper>
+    <Paper
+      sx={{
+        margin: '20px auto',
+        padding: '20px',
+        maxWidth: 1200,
+        borderRadius: '16px',
+        transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+        '&:hover': {
+          transform: 'scale(1.02)',
+          boxShadow: 6,
+        },
+      }}
+    >
+      <FormControl fullWidth>
+        <Typography sx={{ mb: 1 }}>Change Class</Typography>
+        <Select value={selectedClass} onChange={handleClassChange} onBlur={handleClassChange}>
+          {allClasses &&
+            allClasses.map((value) => (
+              <MenuItem key={value._id} value={value._id}>
+                {value.class_text}
+              </MenuItem>
+            ))}
+        </Select>
+      </FormControl>
+    </Paper>
 
-      <Button variant="contained" color="primary" onClick={handleOpenAddDialog} style={{ marginBottom: '10px' }}>
-        Add New Period
-      </Button>
+    <Button
+      variant="contained"
+      color="primary"
+      onClick={handleOpenAddDialog}
+      sx={{ display: 'block', margin: '10px auto' }}
+    >
+      Add New Period
+    </Button>
 
+    <Paper
+      sx={{
+        borderRadius: '16px',
+        padding: '10px',
+        transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+        '&:hover': {
+          transform: 'scale(1.02)',
+          boxShadow: 6,
+        },
+      }}
+    >
       <Calendar
         localizer={localizer}
         events={events}
@@ -152,40 +182,38 @@ const Schedule = () => {
         step={30}
         timeslots={1}
         min={new Date(1970, 1, 1, 10, 0, 0)}
- startAccessor="start"
-      endAccessor="end"
-      onSelectEvent={handleSelectEvent}
         max={new Date(1970, 1, 1, 17, 0, 0)}
+        startAccessor="start"
+        endAccessor="end"
+        onSelectEvent={handleSelectEvent}
         defaultDate={new Date()}
         showMultiDayTimes
-      
-        style={{ height: '100%', width: '100%'}}
+        eventPropGetter={eventStyleGetter}
+        style={{ height: '100%', width: '100%' }}
         formats={{ timeGutterFormat: 'hh:mm A' }}
       />
+    </Paper>
 
-      {/* Modal for Editing Events */}
-      <Dialog open={openDialog} onClose={handleCloseDialog}>
-        <DialogTitle>Edit Period</DialogTitle>
-        <DialogContent>
-          <AssignPeriod2 classId={selectedClass} isEdit={true} periodId={selectedEvent} close={handleCloseDialog} />
-        </DialogContent>
-        <DialogActions>
-         
-          <Button onClick={handleCloseDialog}>Cancel</Button>
-        </DialogActions>
-      </Dialog>
+    <Dialog open={openDialog} onClose={handleCloseDialog}>
+      <DialogTitle>Edit Period</DialogTitle>
+      <DialogContent>
+        <AssignPeriod2 classId={selectedClass} isEdit={true} periodId={selectedEvent} close={handleCloseDialog} />
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={handleCloseDialog}>Cancel</Button>
+      </DialogActions>
+    </Dialog>
 
-      {/* Modal for Adding New Period */}
-      <Dialog open={openAddDialog} onClose={handleCloseAddDialog}>
-        <DialogTitle>Add New Period</DialogTitle>
-       <AssignPeriod2 classId={selectedClass} close={handleCloseAddDialog} />
-        <DialogActions>
-          
-          <Button onClick={handleCloseAddDialog}>Cancel</Button>
-        </DialogActions>
-      </Dialog>
-    </Container>
-  );
+    <Dialog open={openAddDialog} onClose={handleCloseAddDialog}>
+      <DialogTitle>Add New Period</DialogTitle>
+      <AssignPeriod2 classId={selectedClass} close={handleCloseAddDialog} />
+      <DialogActions>
+        <Button onClick={handleCloseAddDialog}>Cancel</Button>
+      </DialogActions>
+    </Dialog>
+  </Container>
+);
+
 };
 
 

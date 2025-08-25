@@ -169,9 +169,7 @@ export default function Class() {
           message={message}
         />
       )}
-      <Box
-        sx={{ padding: "40px 10px 20px 10px" }}
-      >
+      <Box sx={{ padding: "40px 10px 20px 10px" }}>
         <Box
           sx={{
             display: "flex",
@@ -182,39 +180,23 @@ export default function Class() {
         >
           <Typography className="text-beautify2 hero-text" variant="h2">Class</Typography>
         </Box>
-
-        <Box component={"div"} sx={{ padding: "40px" }}>
-          <Paper
-            sx={{ padding: "20px", margin: "10px" }}
-          >
+  
+        <Box component={"div"} sx={{ display: 'flex', justifyContent: 'center', px: 2 }}>
+          <Paper sx={{ padding: "30px", width: "100%", maxWidth: "600px", borderRadius: "16px" }}>
             {isEdit ? (
-              <Typography
-                variant="h4"
-                sx={{ fontWeight: "800", textAlign: "center" }}
-              >
+              <Typography variant="h4" sx={{ fontWeight: "800", textAlign: "center" }}>
                 Edit Class
               </Typography>
             ) : (
-              <Typography
-                variant="h4"
-                sx={{ fontWeight: "800", textAlign: "center" }}
-              >
-                Add New  Class
+              <Typography variant="h4" sx={{ fontWeight: "800", textAlign: "center" }}>
+                Add New Class
               </Typography>
-            )}{" "}
-            <Box
-              component="form"
-              noValidate
-              autoComplete="off"
-              onSubmit={Formik.handleSubmit}
-            >
-              
-
+            )}
+            <Box component="form" noValidate autoComplete="off" onSubmit={Formik.handleSubmit}>
               <TextField
                 fullWidth
                 sx={{ marginTop: "10px" }}
-                id="filled-basic"
-                label="Class Text "
+                label="Class Text"
                 variant="outlined"
                 name="class_text"
                 value={Formik.values.class_text}
@@ -226,13 +208,10 @@ export default function Class() {
                   {Formik.errors.class_text}
                 </p>
               )}
-
-
               <TextField
                 fullWidth
                 sx={{ marginTop: "10px" }}
-                id="filled-basic"
-                label="Class Number "
+                label="Class Number"
                 variant="outlined"
                 name="class_num"
                 value={Formik.values.class_num}
@@ -244,28 +223,12 @@ export default function Class() {
                   {Formik.errors.class_num}
                 </p>
               )}
-
-           
-         
-
-
-
-
-
-              <Box sx={{ marginTop: "10px" }} component={"div"}>
-                <Button
-                  type="submit"
-                  sx={{ marginRight: "10px" }}
-                  variant="contained"
-                >
+              <Box sx={{ marginTop: "10px" }}>
+                <Button type="submit" sx={{ marginRight: "10px" }} variant="contained">
                   Submit
                 </Button>
                 {isEdit && (
-                  <Button
-                    sx={{ marginRight: "10px" }}
-                    variant="outlined"
-                    onClick={cancelEdit}
-                  >
+                  <Button variant="outlined" onClick={cancelEdit}>
                     Cancel Edit
                   </Button>
                 )}
@@ -273,33 +236,50 @@ export default function Class() {
             </Box>
           </Paper>
         </Box>
-
-      
-
-        <Box>
-     
-          {studentClass.map((value,i) => (
-
-<Paper key={value._id} sx={{ p: 2, m: 2, display: "inline-block",}}>
-<Box>
-  <Typography variant="h4">Class :{value.class_text} [{value.class_num}]</Typography>
-  <Typography variant="h4">{value.message}</Typography>
-
-</Box>
-<Box component={'div'} sx={{width:'80%', margin:"auto"}}>
-  <IconButton onClick={() => handleEdit(value._id)} color="primary">
-    <EditIcon />
-  </IconButton>
-  <IconButton onClick={() => handleDelete(value._id)} color="secondary">
-    <DeleteIcon />
-  </IconButton>
-</Box>
-</Paper>
-          ))}
-     
-
+  
+        <Box sx={{ mt: 4 }}>
+          <Typography variant="h5" sx={{ fontWeight: "bold", mb: 2, textAlign: "center" }}>
+            Added Classes
+          </Typography>
+  
+          <Box
+            sx={{
+              display: "flex",
+              overflowX: "auto",
+              gap: 2,
+              px: 2,
+              py: 1,
+            }}
+          >
+            {studentClass.map((value) => (
+              <Paper
+                key={value._id}
+                sx={{
+                  p: 2,
+                  minWidth: "250px",
+                  flexShrink: 0,
+                  borderRadius: "12px",
+                  transition: "transform 0.3s ease-in-out",
+                  '&:hover': {
+                    transform: "scale(1.05)",
+                  },
+                }}
+              >
+                <Typography variant="h6">Class: {value.class_text} [{value.class_num}]</Typography>
+                <Box sx={{ display: "flex", justifyContent: "center", mt: 1 }}>
+                  <IconButton onClick={() => handleEdit(value._id)} color="primary">
+                    <EditIcon />
+                  </IconButton>
+                  <IconButton onClick={() => handleDelete(value._id)} color="secondary">
+                    <DeleteIcon />
+                  </IconButton>
+                </Box>
+              </Paper>
+            ))}
+          </Box>
         </Box>
       </Box>
     </>
   );
+  
 }

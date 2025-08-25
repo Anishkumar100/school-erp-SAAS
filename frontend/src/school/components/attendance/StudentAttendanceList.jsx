@@ -145,32 +145,48 @@ const StudentAttendanceList = () => {
   }
 
   return (
-    <>
-      {message && (
-        <CustomizedSnackbars
-          reset={resetMessage}
-          type={type}
-          message={message}
-        />
-      )}
-      <Box sx={{  padding: "40px 10px 20px 10px",width:"100%"}}>
-        <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-          <Typography variant="h2" >Attendance</Typography>
-        </Box>
+  <>
+    {message && (
+      <CustomizedSnackbars
+        reset={resetMessage}
+        type={type}
+        message={message}
+      />
+    )}
+    <Box sx={{ p: { xs: 2, md: 4 }, width: "100%" }}>
+<Typography
+  variant="h4"
+  align="center"
+  gutterBottom
+  sx={{
+    color: '#1976d2',
+    textShadow: '2px 2px 4px rgba(0,0,0,0.3)',
+    fontWeight: 'bold',
+    letterSpacing: '2px',
+    transition: 'all 0.3s ease',
+    '&:hover': {
+      color: '#1565c0',
+      textShadow: '3px 3px 6px rgba(0,0,0,0.4)',
+    },
+  }}
+>
+  Attendance
+</Typography>
 
-        {/* Grid layout using Grid2 */}
-        <Grid container spacing={2}>
-          {/* Left Box: Search and Attendee */}
-          <Grid size={{xs:12, md:4}}>
-            <Item>
-            <Box sx={{ padding: "10px" }}>
-              <FormControl sx={{ minWidth: "200px", marginBottom: "20px" }}>
+
+      <Grid container spacing={3}>
+        {/* Left Panel */}
+        <Grid xs={12} md={3}>
+          <Item elevation={3}>
+            <Box sx={{ p: 2 }}>
+              <FormControl fullWidth sx={{ mb: 2 }}>
                 <InputLabel id="class-select-label">Student Class</InputLabel>
                 <Select
                   labelId="class-select-label"
                   id="class-select"
                   value={selectedClass || ""}
                   onChange={handleClass}
+                  label="Student Class"
                 >
                   <MenuItem value="">Select Class</MenuItem>
                   {studentClass.map((value, i) => (
@@ -183,28 +199,37 @@ const StudentAttendanceList = () => {
 
               <TextField
                 label="Search Name"
+                variant="outlined"
                 onChange={handleSearch}
                 fullWidth
               />
 
-              {selectedClass && <Attendee params={params} classId={selectedClass} handleMessage={handleMessage} />}
+              {selectedClass && (
+                <Box mt={2}>
+                  <Attendee
+                    params={params}
+                    classId={selectedClass}
+                    handleMessage={handleMessage}
+                  />
+                </Box>
+              )}
             </Box>
-            </Item>
-          </Grid>
+          </Item>
+        </Grid>
 
-          {/* Right Box: Table */}
-          <Grid size={{xs:12, md:8}}>
-            <Item sx={{width:"100%"}}>
-            <TableContainer sx={{width:'100%'}} component={Paper}>
-              <Table sx={{  }} aria-label="student attendance table">
+        {/* Right Panel */}
+        <Grid xs={12} md={8}sx={{ flexGrow: 1 }}>
+          <Item elevation={3}  sx={{ height: "100%", width: "100%" }}>
+            <TableContainer component={Paper} sx={{ width: "100%", minHeight: "400px", overflowX: "auto" }}>
+              <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell>Name</TableCell>
-                    <TableCell align="right">Gender</TableCell>
-                    <TableCell align="right">Guardian Phone</TableCell>
-                    <TableCell align="right">Class</TableCell>
-                    <TableCell align="right">Percentage</TableCell>
-                    <TableCell align="right">View</TableCell>
+                    <TableCell><strong>Name</strong></TableCell>
+                    <TableCell align="right"><strong>Gender</strong></TableCell>
+                    <TableCell align="right"><strong>Guardian Phone</strong></TableCell>
+                    <TableCell align="right"><strong>Class</strong></TableCell>
+                    <TableCell align="right"><strong>Percentage</strong></TableCell>
+                    <TableCell align="right"><strong>View</strong></TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -229,12 +254,13 @@ const StudentAttendanceList = () => {
                 </TableBody>
               </Table>
             </TableContainer>
-            </Item>
-          </Grid>
+          </Item>
         </Grid>
-      </Box>
-    </>
-  );
+      </Grid>
+    </Box>
+  </>
+);
+
 };
 
 export default StudentAttendanceList;

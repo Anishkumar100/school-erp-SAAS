@@ -156,51 +156,41 @@ import {
             message={message}
           />
         )}
-        <Box
-        >
+        <Box>
           <Box
             sx={{
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
             }}
-            component={"div"}
           >
-            <Typography className="hero-text" variant="h2">Subject</Typography>
+            <Typography className="hero-text" variant="h2">
+              Subject
+            </Typography>
           </Box>
-  
-          <Box component={"div"} sx={{ }}>
+    
+          <Box>
             <Paper
-              sx={{ padding:'20px', margin: "10px" }}
+              elevation={4}
+              sx={{
+                padding: "30px",
+                margin: "20px auto",
+                borderRadius: "20px",
+                maxWidth: "600px",
+              }}
             >
-              {isEdit ? (
-                <Typography
-                  variant="h4"
-                  sx={{ fontWeight: "800", textAlign: "center" }}
-                >
-                  Edit subject
-                </Typography>
-              ) : (
-                <Typography
-                  variant="h4"
-                  sx={{ fontWeight: "800", textAlign: "center" }}
-                >
-                  Add New  subject
-                </Typography>
-              )}{" "}
-              <Box
-                component="form"
-                noValidate
-                autoComplete="off"
-                onSubmit={Formik.handleSubmit}
+              <Typography
+                variant="h4"
+                sx={{ fontWeight: "800", textAlign: "center", mb: 2 }}
               >
-                
-  
+                {isEdit ? "Edit Subject" : "Add New Subject"}
+              </Typography>
+    
+              <Box component="form" noValidate autoComplete="off" onSubmit={Formik.handleSubmit}>
                 <TextField
                   fullWidth
-                  sx={{ marginTop: "10px" }}
-                  id="filled-basic"
-                  label="Subject Text "
+                  sx={{ marginTop: "10px", borderRadius: "10px" }}
+                  label="Subject Text"
                   variant="outlined"
                   name="subject_name"
                   value={Formik.values.subject_name}
@@ -212,13 +202,11 @@ import {
                     {Formik.errors.subject_name}
                   </p>
                 )}
-  
-  
+    
                 <TextField
                   fullWidth
-                  sx={{ marginTop: "10px" }}
-                  id="filled-basic"
-                  label="Subject Codename "
+                  sx={{ marginTop: "10px", borderRadius: "10px" }}
+                  label="Subject Codename"
                   variant="outlined"
                   name="subject_codename"
                   value={Formik.values.subject_codename}
@@ -230,25 +218,18 @@ import {
                     {Formik.errors.subject_codename}
                   </p>
                 )}
-  
-             
-           
-  
-  
-  
-  
-  
-                <Box sx={{ marginTop: "10px" }} component={"div"}>
+    
+                <Box sx={{ marginTop: "20px", textAlign: "center" }}>
                   <Button
                     type="submit"
-                    sx={{ marginRight: "10px" }}
+                    sx={{ marginRight: "10px", borderRadius: "20px" }}
                     variant="contained"
                   >
                     Submit
                   </Button>
                   {isEdit && (
                     <Button
-                      sx={{ marginRight: "10px" }}
+                      sx={{ borderRadius: "20px" }}
                       variant="outlined"
                       onClick={cancelEdit}
                     >
@@ -259,45 +240,75 @@ import {
               </Box>
             </Paper>
           </Box>
-  
-        
-  
-          <Box>
-          <TableContainer component={Paper}>
-        <Table sx={{ minWidth: 650 }} aria-label="simple table">
-          <TableHead>
-            <TableRow>
-               <TableCell component="th" scope="row"> subject Name</TableCell>
-                <TableCell align="right">Codename</TableCell>
-                <TableCell align="right">Details</TableCell>
-                <TableCell align="right">Action</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {studentSubject.map((value,i) => (
-              <TableRow
-                key={i}
-                sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-              >
-                <TableCell component="th" scope="row">
-                  {value.subject_name}
-                </TableCell>
-                <TableCell align="right">{value.subject_codename}</TableCell>
-                <TableCell align="right">{"Details"}</TableCell>
-                <TableCell align="right">  <Box component={'div'} sx={{bottom:0, display:'flex',justifyContent:"end"}} >
-                                  <Button variant='contained' sx={{background:"red",color:"#fff"}} onClick={()=>{handleDelete(value._id)}}>Delete</Button>
-                                  <Button variant='contained' sx={{background:"gold", color:"#222222"}} onClick={()=>{handleEdit(value._id)}}>Edit</Button>
-                              </Box></TableCell>
-             
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-  
+    
+          <Box sx={{ paddingX: 2, mt: 4 }}>
+            <Typography variant="h5" sx={{ mb: 2, fontWeight: "bold", textAlign: "center" }}>
+              Added Subjects
+            </Typography>
+    
+            <TableContainer component={Paper} sx={{ borderRadius: "20px" }}>
+              <Table sx={{ minWidth: 650 }} aria-label="subjects table">
+                <TableHead>
+                  <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
+                    <TableCell>Subject Name</TableCell>
+                    <TableCell align="right">Codename</TableCell>
+                    <TableCell align="right">Details</TableCell>
+                    <TableCell align="right">Action</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {studentSubject.map((value, i) => (
+                    <TableRow
+                      key={i}
+                      sx={{
+                        transition: "transform 0.3s ease, background-color 0.3s ease",
+                        backgroundColor: "#1e1e1e",
+                        color: "#fff",
+                        "&:hover": {
+                          transform: "scale(1.02)",
+                          backgroundColor: "#2a2a2a",
+                        },
+                        "& td, & th": {
+                          color: "#fff",
+                        },
+                      }}
+                    >
+                      <TableCell component="th" scope="row">
+                        {value.subject_name}
+                      </TableCell>
+                      <TableCell align="right">{value.subject_codename}</TableCell>
+                      <TableCell align="right">Details</TableCell>
+                      <TableCell align="right">
+                        <Box sx={{ display: "flex", justifyContent: "end", gap: 1 }}>
+                          <Button
+                            variant="contained"
+                            sx={{ background: "red", color: "#fff", borderRadius: "10px" }}
+                            onClick={() => handleDelete(value._id)}
+                          >
+                            Delete
+                          </Button>
+                          <Button
+                            variant="contained"
+                            sx={{
+                              background: "gold",
+                              color: "#222222",
+                              borderRadius: "10px",
+                            }}
+                            onClick={() => handleEdit(value._id)}
+                          >
+                            Edit
+                          </Button>
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
           </Box>
         </Box>
       </>
     );
+    
   }
   

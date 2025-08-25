@@ -214,264 +214,174 @@ import TeacherCardAdmin from "../../utility components/teacher card/TeacherCard"
     }, [message, params]);
     return (
       <>
-        {message && (
-          <CustomizedSnackbars
-            reset={resetMessage}
-            type={type}
-            message={message}
-          />
-        )}
-        <Box
-          sx={{ padding: "40px 10px 20px 10px" }}
-        >
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-            component={"div"}
-          >
-            <Typography variant="h2">Teachers</Typography>
-          </Box>
-  
-          <Box component={"div"} sx={{ padding: "40px" }}>
-            <Paper
-              sx={{ padding: "20px", margin: "10px" }}
+        <Box sx={{ padding: "40px 10px 20px 10px" }}>
+          {message && (
+            <CustomizedSnackbars reset={resetMessage} type={type} message={message} />
+          )}
+    
+          <Box sx={{ display: "flex", justifyContent: "center", mb: 3 }}>
+            <Typography
+              variant="h3"
+              sx={(theme) => ({
+                fontWeight: "bold",
+                color: theme.palette.text.primary,
+              })}
             >
-              {isEdit ? (
-                <Typography
-                  variant="h4"
-                  sx={{ fontWeight: "800", textAlign: "center" }}
-                >
-                  Edit teachers
-                </Typography>
-              ) : (
-                <Typography
-                  variant="h4"
-                  sx={{ fontWeight: "800", textAlign: "center" }}
-                >
-                  Add New teacher
-                </Typography>
-              )}{" "}
-              <Box
-                component="form"
-                noValidate
-                autoComplete="off"
-                onSubmit={Formik.handleSubmit}
-              >
-              
-                  <Box
-                    component={"div"}
-                    sx={{
-                      display: "flex",
-                      flexDirection: "row",
-                      flexWrap: "wrap",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Typography style={{ marginRight: "50px" }} variant="h4">
-                      teacher Pic
-                    </Typography>
-                    <TextField
-                      sx={{ marginTop: "10px" }}
-                      id=""
-                      variant="outlined"
-                      name="file"
-                      type="file"
-                      onChange={(event) => {
-                        addImage(event);
-                      }}
-                      inputRef={fileInputRef}
-                    />
-  
-                    {file && (
-                      <Box sx={{ position: "relative" }} component={"div"}>
-                        <CardMedia
-                          component={"img"}
-                          image={imageUrl}
-                          height={"240px"}
-                        />
-                      </Box>
-                    )}
-                  </Box>
-  
-                <TextField
-                  fullWidth
-                  sx={{ marginTop: "10px" }}
-                  id=""
-                  label="Email "
-                  variant="outlined"
-                  name="email"
-                  value={Formik.values.email}
-                  onChange={Formik.handleChange}
-                  onBlur={Formik.handleBlur}
+              Teachers
+            </Typography>
+          </Box>
+    
+          <Paper
+            elevation={3}
+            sx={(theme) => ({
+              maxWidth: 500,
+              mx: "auto",
+              p: 4,
+              borderRadius: "20px",
+              backgroundColor:
+                theme.palette.mode === "dark" ? "#1f1f1f" : "#f5f5f5",
+              color: theme.palette.text.primary,
+            })}
+          >
+            <Typography
+              variant="h5"
+              sx={{ textAlign: "center", fontWeight: "bold", mb: 2 }}
+            >
+              {isEdit ? "Edit Teacher" : "Add New Teacher"}
+            </Typography>
+    
+            <Box
+              component="form"
+              noValidate
+              autoComplete="off"
+              onSubmit={Formik.handleSubmit}
+            >
+              <Typography variant="body1" sx={{ mb: 1 }}>
+                Teacher Pic
+              </Typography>
+    
+              <TextField
+                fullWidth
+                type="file"
+                name="file"
+                inputRef={fileInputRef}
+                onChange={addImage}
+                sx={{ mb: 2 }}
+                InputLabelProps={{ shrink: true }}
+              />
+    
+              {file && (
+                <CardMedia
+                  component="img"
+                  image={imageUrl}
+                  height="200"
+                  sx={{ borderRadius: "12px", objectFit: "cover", mb: 2 }}
                 />
-                {Formik.touched.email && Formik.errors.email && (
-                  <p style={{ color: "red", textTransform: "capitalize" }}>
-                    {Formik.errors.email}
-                  </p>
-                )}
-  
-
-                <TextField
-                  fullWidth
-                  sx={{ marginTop: "10px" }}
-                  id=""
-                  label="name "
-                  variant="outlined"
-                  name="name"
-                  value={Formik.values.name}
-                  onChange={Formik.handleChange}
-                  onBlur={Formik.handleBlur}
-                />
-                {Formik.touched.name && Formik.errors.name && (
-                  <p style={{ color: "red", textTransform: "capitalize" }}>
-                    {Formik.errors.name}
-                  </p>
-                )}
-  
-  <TextField
-                  fullWidth
-                  sx={{ marginTop: "10px" }}
-                  id=""
-                  label="Qualification "
-                  variant="outlined"
-                  name="qualification"
-                  value={Formik.values.qualification}
-                  onChange={Formik.handleChange}
-                  onBlur={Formik.handleBlur}
-                />
-                {Formik.touched.qualification && Formik.errors.qualification && (
-                  <p style={{ color: "red", textTransform: "capitalize" }}>
-                    {Formik.errors.qualification}
-                  </p>
-                )}
-  
-                <FormControl sx={{ minWidth: "220px", marginTop: "10px" }}>
-                  <InputLabel id="demo-simple-select-label">Gender</InputLabel>
-                  <Select
-                    labelId="demo-simple-select-label"
-                    id="demo-simple-select"
-                    label="Gender"
-                    name="gender"
+              )}
+    
+              {["email", "name", "qualification", "age", "password"].map((field) =>
+                !isEdit && field === "password" ? (
+                  <TextField
+                    key={field}
+                    fullWidth
+                    type="password"
+                    label="Password"
+                    name="password"
+                    value={Formik.values.password}
                     onChange={Formik.handleChange}
                     onBlur={Formik.handleBlur}
-                    value={Formik.values.gender}
-                  >
-                    <MenuItem value={""}>Select Gender</MenuItem>
-                    <MenuItem value={"male"}>Male</MenuItem>
-                    <MenuItem value={"female"}>Female</MenuItem>
-                    <MenuItem value={"other"}>Other</MenuItem>
-                  </Select>
-                </FormControl>
-                {Formik.touched.gender && Formik.errors.gender && (
-                  <p style={{ color: "red", textTransform: "capitalize" }}>
-                    {Formik.errors.gender}
-                  </p>
-                )}
-  
-  
-             <TextField
-                  fullWidth
-                  sx={{ marginTop: "10px" }}
-                  id=""
-                  label="Age "
-                  variant="outlined"
-                  name="age"
-                  value={Formik.values.age}
+                    sx={{ mb: 2 }}
+                  />
+                ) : field !== "password" ? (
+                  <TextField
+                    key={field}
+                    fullWidth
+                    label={field.charAt(0).toUpperCase() + field.slice(1)}
+                    name={field}
+                    value={Formik.values[field]}
+                    onChange={Formik.handleChange}
+                    onBlur={Formik.handleBlur}
+                    sx={{ mb: 2 }}
+                  />
+                ) : null
+              )}
+    
+              <FormControl fullWidth sx={{ mb: 2 }}>
+                <InputLabel>Gender</InputLabel>
+                <Select
+                  name="gender"
+                  label="Gender"
+                  value={Formik.values.gender}
                   onChange={Formik.handleChange}
                   onBlur={Formik.handleBlur}
-                />
-                {Formik.touched.age && Formik.errors.age && (
-                  <p style={{ color: "red", textTransform: "capitalize" }}>
-                    {Formik.errors.age}
-                  </p>
-                )}
-  
-  
-           
-             
-  
-                  {!isEdit && <>
-                  
-                <TextField
+                >
+                  <MenuItem value="">Select Gender</MenuItem>
+                  <MenuItem value="male">Male</MenuItem>
+                  <MenuItem value="female">Female</MenuItem>
+                  <MenuItem value="other">Other</MenuItem>
+                </Select>
+              </FormControl>
+    
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                sx={{
+                  mt: 1,
+                  mb: 2,
+                  py: 1.5,
+                  borderRadius: "10px",
+                  fontWeight: "bold",
+                }}
+              >
+                Submit
+              </Button>
+    
+              {isEdit && (
+                <Button
                   fullWidth
-                  sx={{ marginTop: "10px" }}
-                  id=""
-                  label="Password "
                   variant="outlined"
-                  name="password"
-                  type="password"
-                  value={Formik.values.password}
-                  onChange={Formik.handleChange}
-                  onBlur={Formik.handleBlur}
-                />
-                {Formik.touched.password && Formik.errors.password && (
-                  <p style={{ color: "red", textTransform: "capitalize" }}>
-                    {Formik.errors.password}
-                  </p>
-                )}
-                  </>}
-  
-  
-                <Box sx={{ marginTop: "10px" }} component={"div"}>
-                  <Button
-                    type="submit"
-                    sx={{ marginRight: "10px" }}
-                    variant="contained"
-                  >
-                    Submit
-                  </Button>
-                  {isEdit && (
-                    <Button
-                      sx={{ marginRight: "10px" }}
-                      variant="outlined"
-                      onClick={cancelEdit}
-                    >
-                      Cancel Edit
-                    </Button>
-                  )}
-                </Box>
-              </Box>
-            </Paper>
-          </Box>
-  
-          <Box
-            sx={{
-              padding: "5px",
-              minWidth: 120,
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              marginBottom: "20px",
-            }}
-          >
-           
-           
-  
+                  onClick={cancelEdit}
+                  sx={{
+                    py: 1.5,
+                    borderRadius: "10px",
+                  }}
+                >
+                  Cancel Edit
+                </Button>
+              )}
+            </Box>
+          </Paper>
+    
+          <Box sx={{ mt: 4, display: "flex", justifyContent: "center" }}>
             <TextField
-              id=""
-              label="Search Name  .. "
+              label="Search Name ..."
               onChange={handleSearch}
+              sx={{ borderRadius: "12px" }}
             />
           </Box>
-  
-          <Box sx={{display:"flex",  flexDirection:"row", flexWrap:"wrap",}}>
+    
+          <Box
+            sx={{
+              mt: 4,
+              display: "flex",
+              flexWrap: "wrap",
+              justifyContent: "center",
+              gap: 2,
+            }}
+          >
             {teachers &&
-              teachers.map((teacher, i) => {
-                return (
-                  <TeacherCardAdmin
-                    key={i}
-                    handleEdit={handleEdit}
-                    handleDelete={handleDelete}
-                    teacher={teacher}
-                  />
-                );
-              })}
+              teachers.map((teacher, i) => (
+                <TeacherCardAdmin
+                  key={i}
+                  handleEdit={handleEdit}
+                  handleDelete={handleDelete}
+                  teacher={teacher}
+                />
+              ))}
           </Box>
         </Box>
       </>
     );
-  }
+    }
   

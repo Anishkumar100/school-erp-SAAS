@@ -96,43 +96,75 @@ const AttendanceTeacher = () => {
   }
 
   return (
-    <Container>
-      <Typography variant="h4" gutterBottom>Mark Attendance for All Students</Typography>
-      {attendeeClass.length>0? <Alert severity="info" sx={{ mb: 3 }}>
-          Your Are Attendee of {attendeeClass.length} class{attendeeClass.length>1 && 'es'}. Select the class and Take attendance.
-        </Alert>:
-        <Alert severity='info'>You are not attendee of any Class.</Alert>}
-     {attendeeClass.length>0 && <FormControl fullWidth sx={{ mb: 3 }}>
-        <InputLabel>Select Class</InputLabel>
-        <Select value={selectedClass?`${selectedClass.id},${selectedClass.class_text}`:""} onChange={handleClassChange}>
-          <MenuItem value={''}>Select Class</MenuItem>
-          {attendeeClass && attendeeClass.map((student_class,i)=>(
-             <MenuItem key={i} value={`${student_class.classId},${student_class.class_text}`}>{student_class.class_text}</MenuItem>
-          ))}
-        
-          {/* Add more class options as needed */}
-        </Select>
-      </FormControl>} 
-
- 
-      {attendeeClass.length>0 && selectedClass && attendanceTaken && (
+    <Container
+      sx={{
+        maxWidth: '800px',
+        margin: 'auto',
+        padding: 3,
+        backgroundColor: 'transparent', // ✅ fully transparent now
+        borderRadius: 3,
+        boxShadow: 'none',              // ✅ remove dark shadow
+        mt: 5
+      }}
+    >
+      <Typography variant="h4" gutterBottom align="center">
+        Mark Attendance
+      </Typography>
+  
+      {attendeeClass.length > 0 ? (
         <Alert severity="info" sx={{ mb: 3 }}>
-          Attendance has already been taken for today for Class {selectedClass.class_text}
+          You are attendee of {attendeeClass.length} class
+          {attendeeClass.length > 1 && 'es'}. Select a class to take attendance.
         </Alert>
-      ) }
-        {attendeeClass.length>0 && selectedClass && !attendanceTaken && students.length<1 && (
-            <Alert severity="info" sx={{ mb: 3 }}>
-            There is no students in { selectedClass.class_text} class now.
-          </Alert>
-        )}
-      {attendeeClass.length>0 && selectedClass && !attendanceTaken && students.length>0 && (
+      ) : (
+        <Alert severity="info">You are not attendee of any class.</Alert>
+      )}
+  
+      {attendeeClass.length > 0 && (
+        <FormControl fullWidth sx={{ mb: 3 }}>
+          <InputLabel>Select Class</InputLabel>
+          <Select
+            value={
+              selectedClass
+                ? `${selectedClass.id},${selectedClass.class_text}`
+                : ''
+            }
+            onChange={handleClassChange}
+          >
+            <MenuItem value="">Select Class</MenuItem>
+            {attendeeClass.map((student_class, i) => (
+              <MenuItem
+                key={i}
+                value={`${student_class.classId},${student_class.class_text}`}
+              >
+                {student_class.class_text}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      )}
+  
+      {selectedClass && attendanceTaken && (
+        <Alert severity="info" sx={{ mb: 3 }}>
+          Attendance already taken today for class {selectedClass.class_text}.
+        </Alert>
+      )}
+  
+      {selectedClass && !attendanceTaken && students.length < 1 && (
+        <Alert severity="info" sx={{ mb: 3 }}>
+          No students found in {selectedClass.class_text} class.
+        </Alert>
+      )}
+  
+      {selectedClass && !attendanceTaken && students.length > 0 && (
         <>
-          <Table>
+          {/* ✅ Table fully transparent now */}
+          <Table sx={{ borderRadius: 2, backgroundColor: 'transparent' }}>
             <TableHead>
               <TableRow>
-                <TableCell>Student Name</TableCell>
-                <TableCell>Roll Number</TableCell>
-                <TableCell>Attendance Status</TableCell>
+                <TableCell><strong>Name</strong></TableCell>
+                <TableCell><strong>Roll Number</strong></TableCell>
+                <TableCell><strong>Status</strong></TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -143,7 +175,10 @@ const AttendanceTeacher = () => {
                   <TableCell>
                     <Select
                       value={attendanceStatus[student._id]}
-                      onChange={(e) => handleStatusChange(student._id, e.target.value)}
+                      onChange={(e) =>
+                        handleStatusChange(student._id, e.target.value)
+                      }
+                      fullWidth
                     >
                       <MenuItem value="Present">Present</MenuItem>
                       <MenuItem value="Absent">Absent</MenuItem>
@@ -153,16 +188,20 @@ const AttendanceTeacher = () => {
               ))}
             </TableBody>
           </Table>
-
-          <Button variant="contained" color="primary" onClick={submitAttendance} sx={{ mt: 3 }}>
+  
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={submitAttendance}
+            sx={{ mt: 3, display: 'block', ml: 'auto', mr: 'auto' }}
+          >
             Submit Attendance
           </Button>
         </>
       )}
-
-      
     </Container>
   );
+  
 };
 
 export default AttendanceTeacher;

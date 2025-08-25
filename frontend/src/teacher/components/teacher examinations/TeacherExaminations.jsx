@@ -67,79 +67,116 @@ export default function TeacherExaminations() {
 
   return (
     <>
-      <Typography variant="h3" sx={{textAlign:'center', marginBottom:"15px", fontWeight:"600" }}>Examinations</Typography>
-            
-      <Paper sx={{ margin: "10px", padding: "10px" }}>
-        <FormControl sx={{ minWidth: "220px", marginTop: "10px" }}>
-          <Typography>Change Class</Typography>
-          <Select
-            value={selectedClass}
-            onChange={handleClassChange}
-            onBlur={handleClassChange}
-          >
-            {allClasses &&
-              allClasses.map((value) => (
-                <MenuItem key={value._id} value={value._id}>
-                  {value.class_text}
-                </MenuItem>
-              ))}
-          </Select>
-        </FormControl>
-      </Paper>
-
-      <Paper sx={{ padding: "20px", margin: "10px" }}>
-      
-
-        {examinations.length<1?<NoData text={"There is no Examination."} />:
-        <>
-          <Typography
-          sx={{ textAlign: "center"  }}
-          variant="h5"
+      <Box sx={{ maxWidth: "1000px", mx: "auto", p: 2 }}>
+        <Typography
+          variant="h3"
+          sx={{ textAlign: "center", marginBottom: "15px", fontWeight: "600" }}
         >
-          Examinations List
+          Examinations
         </Typography>
-       
-        
-        <TableContainer component={Paper}>
-          <Table sx={{ minWidth: 250 }} aria-label="simple table">
-            <TableHead>
-              <TableRow>
-                <TableCell sx={{ fontWeight: "700" }} align="left">
-                  Exam Date
-                </TableCell>
-                <TableCell sx={{ fontWeight: "700" }} align="left">
-                  Subject
-                </TableCell>
-                <TableCell sx={{ fontWeight: "700" }} align="center">
-                  Exam Type
-                </TableCell>
-                
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {examinations &&
-                examinations.map((examination, i) => {
-                  return (
-                    <TableRow key={i}>
-                      <TableCell component="th" scope="row">
-                        {convertDate(examination.examDate)}
+  
+        <Paper
+          sx={{
+            margin: "10px",
+            padding: "10px",
+            borderRadius: "12px",
+          }}
+        >
+          <FormControl sx={{ minWidth: "220px", marginTop: "10px" }}>
+            <Typography>Change Class</Typography>
+            <Select
+              value={selectedClass}
+              onChange={handleClassChange}
+              onBlur={handleClassChange}
+              sx={{ borderRadius: "8px" }}
+            >
+              {allClasses &&
+                allClasses.map((value) => (
+                  <MenuItem key={value._id} value={value._id}>
+                    {value.class_text}
+                  </MenuItem>
+                ))}
+            </Select>
+          </FormControl>
+        </Paper>
+  
+        <Paper
+  sx={{
+    margin: "10px",
+    padding: "10px",
+    borderRadius: "12px",
+    transition: "transform 0.3s ease-in-out",
+    "&:hover": {
+      transform: "scale(1.02)",
+    },
+  }}
+>
+
+          {examinations.length < 1 ? (
+            <NoData text={"There is no Examination."} />
+          ) : (
+            <>
+              <Typography sx={{ textAlign: "center" }} variant="h5">
+                Examinations List
+              </Typography>
+  
+              <TableContainer component={Paper} sx={{ borderRadius: "12px" }}>
+                <Table sx={{ minWidth: 250 }} aria-label="simple table">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell sx={{ fontWeight: "700" }} align="left">
+                        Exam Date
                       </TableCell>
-                      <TableCell align="left">
-                        {examination.subject.subject_name}
+                      <TableCell sx={{ fontWeight: "700" }} align="left">
+                        Subject
                       </TableCell>
-                      <TableCell align="center">
-                        {examination.examType}
+                      <TableCell sx={{ fontWeight: "700" }} align="center">
+                        Exam Type
                       </TableCell>
-                    
                     </TableRow>
-                  );
-                })}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        </>
-       }
-      </Paper>
+                  </TableHead>
+                  <TableBody>
+                    {examinations &&
+                      examinations.map((examination, i) => {
+                        return (
+                          <TableRow
+                          key={i}
+                          sx={{
+                            "&:hover td.subject-cell": {
+                              backgroundColor: "#ffffff",
+                            },
+                          }}
+                        >
+                        
+                            <TableCell component="th" scope="row">
+                              {convertDate(examination.examDate)}
+                            </TableCell>
+                            <TableCell
+                              align="left"
+                              sx={{
+                                transition: "background-color 0.2s ease-in-out",
+                                "&:hover": {
+                                  backgroundColor: "#ffffff",
+                                },
+                              }}
+                            >
+                              {examination.subject.subject_name}
+                            </TableCell>
+
+                            <TableCell align="center">
+                              {examination.examType}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </>
+          )}
+        </Paper>
+      </Box>
     </>
   );
+  
 }

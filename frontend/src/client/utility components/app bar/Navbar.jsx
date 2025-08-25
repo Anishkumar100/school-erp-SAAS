@@ -55,13 +55,8 @@ function Navbar() {
               alignItems: 'center',
             }}
           >
-            <img
-              src='./images/static/school_management_system.png'
-              height="50"
-              alt="School Management System Logo"
-              style={{ marginRight: '8px' }}
-            />
-            MULTIPLE SCHOOL MANAGEMENT SYSTEM
+            
+            SPARK SCHOOL MANAGEMENT SYSTEM
           </Typography>
 
           {/* Mobile menu button */}
@@ -129,7 +124,7 @@ function Navbar() {
               flexGrow: 1,
             }}
           >
-            SMS
+            SSMS
           </Typography>
 
           {/* Desktop buttons */}

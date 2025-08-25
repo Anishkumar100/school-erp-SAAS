@@ -18,7 +18,7 @@ function Footer() {
     >
       <Container>
         <Typography variant="body1">
-          &copy; {new Date().getFullYear()} My Application. All rights reserved.
+          &copy; {new Date().getFullYear()} SPARK SOLUTIONS. All rights reserved.
         </Typography>
         <Typography variant="body2" color="textSecondary">
           Follow us on social media: Facebook | Twitter | Instagram

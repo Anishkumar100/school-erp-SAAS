@@ -80,7 +80,8 @@ const Schedule = () => {
   return (
     <Container>
       <h2>Weekly Schedule</h2>
-
+  
+      {/* Class Selection Box */}
       <Paper sx={{ margin: '10px', padding: '10px' }}>
         <FormControl sx={{ minWidth: '220px', marginTop: '10px' }}>
           <Typography>Change Class</Typography>
@@ -94,26 +95,43 @@ const Schedule = () => {
           </Select>
         </FormControl>
       </Paper>
-
-      <Calendar
-        localizer={localizer}
-        events={events}
-        defaultView="week"
-        views={['week']}
-        step={30}
-        timeslots={1}
-        min={new Date(1970, 1, 1, 10, 0, 0)}
-        startAccessor="start"
-        endAccessor="end"
-        max={new Date(1970, 1, 1, 17, 0, 0)}
-        defaultDate={new Date()}
-        showMultiDayTimes
-        style={{ height: '100%', width: '100%' }}
-        formats={{ timeGutterFormat: 'hh:mm A' }}
-        eventPropGetter={eventStyleGetter}
-      />
+  
+      {/* Calendar with rounded + zoom on hover */}
+      <Paper
+        elevation={3}
+        sx={{
+          borderRadius: '16px',
+          overflow: 'hidden',
+          mx: 'auto',
+          my: 2,
+          width: '95%',
+          transition: 'transform 0.3s ease-in-out',
+          '&:hover': {
+            transform: 'scale(1.02)',
+          },
+        }}
+      >
+        <Calendar
+          localizer={localizer}
+          events={events}
+          defaultView="week"
+          views={['week']}
+          step={30}
+          timeslots={1}
+          min={new Date(1970, 1, 1, 10, 0, 0)}
+          startAccessor="start"
+          endAccessor="end"
+          max={new Date(1970, 1, 1, 17, 0, 0)}
+          defaultDate={new Date()}
+          showMultiDayTimes
+          style={{ height: '100%', width: '100%' }}
+          formats={{ timeGutterFormat: 'hh:mm A' }}
+          eventPropGetter={eventStyleGetter}
+        />
+      </Paper>
     </Container>
   );
+  
 };
 
 export default Schedule;
