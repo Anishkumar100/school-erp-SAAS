@@ -2,7 +2,7 @@
 
 const express = require("express");
 const router = express.Router();
-const authMiddleware = require('../middleware/auth.js'); // Corrected path
+const authMiddleware = require('../auth/auth.js');
 
 // ✅ FIX: Import the correct, consolidated function name
 const { newNotice, getNotices, deleteNotice, editNotice } = require("../controller/notice.controller");

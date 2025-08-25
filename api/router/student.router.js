@@ -11,7 +11,7 @@ const {
     deleteStudentWithId 
 } = require("../controller/student.controller");
 // ✅ Corrected Path
-const authMiddleware = require("../middleware/auth.js"); 
+const authMiddleware = require('../auth/auth.js');
 const router = express.Router();
 
 // --- PUBLIC ROUTE ---

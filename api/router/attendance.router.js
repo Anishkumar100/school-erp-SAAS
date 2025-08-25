@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { markAttendance, getAttendance, checkAttendance } = require('../controller/attendance.controller');
-const authMiddleware = require('../auth/auth')
+const authMiddleware = require('../auth/auth.js');
 // Mark attendance
 router.post('/mark',authMiddleware(['TEACHER']) , markAttendance);
 router.get('/:studentId',authMiddleware(['TEACHER', 'STUDENT','SCHOOL']),  getAttendance);

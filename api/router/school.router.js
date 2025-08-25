@@ -1,6 +1,6 @@
 const express = require("express");
 // ✅ Corrected Path
-const authMiddleware = require('../middleware/auth.js'); 
+const authMiddleware = require('../auth/auth.js');
 const { 
     getAllSchools, 
     updateSchoolWithId,

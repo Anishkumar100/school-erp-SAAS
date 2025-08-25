@@ -12,7 +12,7 @@ const {
 } = require("../controller/teacher.controller");
 const router = express.Router();
 // ✅ Corrected Path
-const authMiddleware = require("../middleware/auth.js"); 
+const authMiddleware = require('../auth/auth.js');
 
 // --- PUBLIC ROUTE ---
 router.post("/login", loginTeacher);

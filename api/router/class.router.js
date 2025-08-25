@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 // ✅ Corrected Path
-const authMiddleware = require('../middleware/auth.js'); 
+const authMiddleware = require('../auth/auth.js');
 const { 
     createClass, 
     getAllClass, 
