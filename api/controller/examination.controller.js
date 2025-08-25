@@ -7,7 +7,7 @@ module.exports = {
               subject:req.body.subject,
               examType:req.body.exam_type,
               class:req.body.class_id,
-              school:req.user.id
+              school:req.user.schoolId
           })
           newExamination.save().then(resp=>{
               res.status(200).send({success:true,  message:"Exam assigned Successfully."})
