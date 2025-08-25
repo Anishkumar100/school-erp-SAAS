@@ -26,13 +26,8 @@ app.use(express.urlencoded({extended:true}));
 app.use(cookieParser());
 const cors = require("cors");
 
-const corsOptions = {
-  origin: "https://spark-erp-one.vercel.app", // your frontend
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true, // allow cookies/auth headers
-};
 
-app.use(cors(corsOptions));
+app.use(cors());
 
 // MONGODB CONNECTION
 mongoose.connect(`mongodb+srv://akcoder1102004:ak@schoolmanagement.9ltii0g.mongodb.net/?retryWrites=true&w=majority&appName=schoolManagement`).then(db=>{
