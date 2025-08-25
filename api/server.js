@@ -1,61 +1,59 @@
 require("dotenv").config();
 
 const express = require("express");
+const cookieParser = require("cookie-parser");
 const cors = require("cors");
-const cookieParser  = require("cookie-parser");
-const mongoose = require("mongoose");
+const connectToDatabase = require("./db"); // <-- import reusable DB
 
 // ROUTERS
-const schoolRouter = require("./router/school.router")
-const studentRouter = require("./router/student.router")
-const classRouter = require("./router/class.router")
-const subjectRouter = require("./router/subject.router")
-const teacherRouter = require('./router/teacher.router')
-const examRouter =  require('./router/examination.router')
+const schoolRouter = require("./router/school.router");
+const studentRouter = require("./router/student.router");
+const classRouter = require("./router/class.router");
+const subjectRouter = require("./router/subject.router");
+const teacherRouter = require('./router/teacher.router');
+const examRouter = require('./router/examination.router');
 const attendanceRoutes = require('./router/attendance.router');
 const periodRoutes = require("./router/period.router");
 const noticeRoutes = require("./router/notice.router");
-const authMiddleware = require("./auth/auth");
 const { authCheck } = require("./controller/auth.controller");
 
 const app = express();
 
-// middleware 
+// Middleware
 app.use(express.json());
-app.use(express.urlencoded({extended:true}));
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-const cors = require("cors");
 
+const corsOptions = {
+  origin: "https://spark-erp-one.vercel.app",
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
+};
+app.use(cors(corsOptions));
 
-app.use(cors());
+// Connect to MongoDB once
+connectToDatabase(process.env.MONGO_URI || `mongodb+srv://akcoder1102004:ak@schoolmanagement.9ltii0g.mongodb.net/?retryWrites=true&w=majority`)
+  .then(() => console.log("MongoDB Connected Successfully"))
+  .catch((e) => console.log("MongoDB Connection Error", e));
 
-// MONGODB CONNECTION
-mongoose.connect(`mongodb+srv://akcoder1102004:ak@schoolmanagement.9ltii0g.mongodb.net/?retryWrites=true&w=majority&appName=schoolManagement`).then(db=>{
-    console.log("MongoDb is Connected Successfully.")
-}).catch(e=>{
-    console.log("MongoDb Error",e)
-})
+// Routes
+app.get("/", (req, res) => {
+  res.send("Spark Solutions Built this APP");
+});
 
-app.get("/",(req,res)=>
-{
-    res.send(`Spark Solutions Built this APP`)
-})
+app.use("/api/school", schoolRouter);
+app.use("/api/student", studentRouter);
+app.use("/api/teacher", teacherRouter);
+app.use("/api/class", classRouter);
+app.use("/api/subject", subjectRouter);
+app.use("/api/examination", examRouter);
+app.use("/api/attendance", attendanceRoutes);
+app.use("/api/period", periodRoutes);
+app.use("/api/notices", noticeRoutes);
 
-
-app.use("/api/school", schoolRouter)
-app.use("/api/student", studentRouter)
-app.use("/api/teacher", teacherRouter)
-app.use("/api/class", classRouter)
-app.use("/api/subject", subjectRouter)
-app.use('/api/examination', examRouter)
-app.use('/api/attendance', attendanceRoutes)
-app.use('/api/period',  periodRoutes)
-app.use('/api/notices', noticeRoutes)
-
-app.get('/api/auth/check',authCheck)
-
+app.get("/api/auth/check", authCheck);
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, ()=>{
-    console.log("Server is running at port =>",PORT)
-})
+app.listen(PORT, () => {
+  console.log("Server running on port", PORT);
+});
