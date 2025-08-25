@@ -5,56 +5,57 @@ export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
     const [authenticated, setAuthenticated] = useState(false)
-  const [user, setUser] = useState(null); // Holds user data (e.g., id, name, role)
-  const [loading, setLoading] = useState(false); // Loading state for initial auth check
-  const [themeDark,setThemeDark] = useState(false)
+    const [user, setUser] = useState(null); 
+    const [loading, setLoading] = useState(true); // Start with true
+    const [themeDark, setThemeDark] = useState(false)
 
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        const userData = localStorage.getItem("user");
+        const theme = localStorage.getItem("themeDark");
 
+        if (theme) {
+            setThemeDark(JSON.parse(theme));
+        }
+        
+        if (token && userData) {
+            setAuthenticated(true);
+            setUser(JSON.parse(userData));
+        }
+        
+        setLoading(false); // Set loading to false after checking
+    }, []);
 
-  // Check for a token in localStorage to persist login
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem("user");
-    const theme  = localStorage.getItem("themeDark");
-    if(theme){
-      console.log(theme,"THEME")
-      setThemeDark(JSON.parse(theme))
+    // Login function - CORRECTED
+    const login = (data) => {
+        // ASSUMING 'data' is the object from your backend, 
+        // containing 'token' and 'user' properties.
+        
+        // 1. Save session data to localStorage FIRST
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user)); // <-- Important: Stringify objects
+
+        // 2. Then, update the state
+        setAuthenticated(true);
+        setUser(data.user);
+    };
+
+    // Logout function
+    const logout = () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setUser(null);
+        setAuthenticated(false);
+    };
+
+    const themeChange = () => {
+        localStorage.setItem("themeDark", `${!themeDark}`);
+        setThemeDark(!themeDark);
     }
-    // console.log("Token", token)
-    if (token) {
-      console.log("token", token)
-      setAuthenticated(true)
-      setUser(JSON.parse(userData));
-    } else {
-      setLoading(false);
-    }
-  }, []);
 
-  // Login function
-  const login = (credentials) => {
-    setAuthenticated(true);
-    setUser(credentials)
-    console.log("login called", credentials)
-
-  };
-
-  // Logout function
-  const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user')
-    setUser(null);
-    setAuthenticated(false)
-  };
-
-  const themeChange =()=>{
-    console.log(themeDark)
-    localStorage.setItem("themeDark", `${!themeDark}`)
-    setThemeDark(!themeDark)
-  }
-
-  return (
-    <AuthContext.Provider value={{authenticated, user, login, logout, loading,themeChange,themeDark }}>
-      {children}
-    </AuthContext.Provider>
-  );
+    return (
+        <AuthContext.Provider value={{ authenticated, user, login, logout, loading, themeChange, themeDark }}>
+            {children}
+        </AuthContext.Provider>
+    );
 };
