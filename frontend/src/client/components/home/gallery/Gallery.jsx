@@ -10,7 +10,7 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 // 1. Import apiClient instead of axios
-import apiClient from '../../../../apiClient'; // Adjust the path to your apiClient.js file
+import apiClient from "../../../Client"; // Adjust the path to your apiClient.js file
 
 const Gallery = () => {
   const [open, setOpen] = useState(false);
