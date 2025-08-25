@@ -24,21 +24,12 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
 app.use(cookieParser());
-const allowedOrigins = [
-  "https://spark-erp-one.vercel.app",
-  "http://localhost:3000" // for local dev
-];
+const cors = require("cors");
+
 const corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
+  origin: "https://spark-erp-one.vercel.app", // your frontend
   methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true,
-  exposedHeaders: ["Authorization"]
+  credentials: true, // allow cookies/auth headers
 };
 
 app.use(cors(corsOptions));
