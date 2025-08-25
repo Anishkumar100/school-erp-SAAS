@@ -13,12 +13,14 @@ export default function Register() {
     const [type, setType] = useState("success");
     const [file, setFile] = useState(null);
     const [imageUrl, setImageUrl] = useState(null);
-    const navigate = useNavigate()
+    const navigate = useNavigate();
 
     const addImage = (event) => {
-        const file = event.target.files[0];
-        setImageUrl(URL.createObjectURL(file));
-        setFile(file);
+        const selectedFile = event.target.files[0];
+        if (selectedFile) {
+            setImageUrl(URL.createObjectURL(selectedFile));
+            setFile(selectedFile);
+        }
     };
 
     const resetMessage = () => {
@@ -37,30 +39,36 @@ export default function Register() {
         initialValues: initialValues,
         validationSchema: registerSchema,
         onSubmit: (values) => {
-            if (file) {
-                const fd = new FormData();
-                fd.append("image", file, file.name);
-                fd.append("school_name", values.school_name);
-                fd.append("email", values.email);
-                fd.append("owner_name", values.owner_name);
-                fd.append("password", values.password);
+            if (!file) {
+                setMessage("Please provide an image.");
+                setType("error");
+                return; // Stop the submission if no file is selected
+            }
 
-                axios.post(`${baseUrl}/school/register`, fd).then(resp => {
+            const fd = new FormData();
+            // ✅ Explicitly append each field to ensure correct parsing
+            fd.append("image", file);
+            fd.append("school_name", values.school_name);
+            fd.append("email", values.email);
+            fd.append("owner_name", values.owner_name);
+            fd.append("password", values.password);
+
+            axios.post(`${baseUrl}/school/register`, fd)
+                .then(resp => {
                     setMessage(resp.data.message);
                     setType("success");
                     setFile(null);
                     Formik.resetForm();
                     setTimeout(() => {
-                        navigate("/");
-                    }, 2000); // waits 2 seconds before redirect
-                }).catch(e => {
-                    setMessage(e.response.data.message);
+                        navigate("/"); // Redirect to login page after success
+                    }, 2000);
+                })
+                .catch(e => {
+                    // Provide a more specific error message if available
+                    const errorMessage = e.response?.data?.message || "Registration failed. Please try again.";
+                    setMessage(errorMessage);
                     setType("error");
                 });
-            } else {
-                setMessage("Please Provide An Image.");
-                setType("error");
-            }
         }
     });
 
@@ -128,10 +136,9 @@ export default function Register() {
                         value={Formik.values.school_name}
                         onChange={Formik.handleChange}
                         onBlur={Formik.handleBlur}
+                        error={Formik.touched.school_name && Boolean(Formik.errors.school_name)}
+                        helperText={Formik.touched.school_name && Formik.errors.school_name}
                     />
-                    {Formik.touched.school_name && Formik.errors.school_name && (
-                        <p style={{ color: "red" }}>{Formik.errors.school_name}</p>
-                    )}
 
                     <TextField
                         fullWidth
@@ -142,10 +149,9 @@ export default function Register() {
                         value={Formik.values.email}
                         onChange={Formik.handleChange}
                         onBlur={Formik.handleBlur}
+                        error={Formik.touched.email && Boolean(Formik.errors.email)}
+                        helperText={Formik.touched.email && Formik.errors.email}
                     />
-                    {Formik.touched.email && Formik.errors.email && (
-                        <p style={{ color: "red" }}>{Formik.errors.email}</p>
-                    )}
 
                     <TextField
                         fullWidth
@@ -156,10 +162,9 @@ export default function Register() {
                         value={Formik.values.owner_name}
                         onChange={Formik.handleChange}
                         onBlur={Formik.handleBlur}
+                        error={Formik.touched.owner_name && Boolean(Formik.errors.owner_name)}
+                        helperText={Formik.touched.owner_name && Formik.errors.owner_name}
                     />
-                    {Formik.touched.owner_name && Formik.errors.owner_name && (
-                        <p style={{ color: "red" }}>{Formik.errors.owner_name}</p>
-                    )}
 
                     <TextField
                         fullWidth
@@ -171,10 +176,9 @@ export default function Register() {
                         value={Formik.values.password}
                         onChange={Formik.handleChange}
                         onBlur={Formik.handleBlur}
+                        error={Formik.touched.password && Boolean(Formik.errors.password)}
+                        helperText={Formik.touched.password && Formik.errors.password}
                     />
-                    {Formik.touched.password && Formik.errors.password && (
-                        <p style={{ color: "red" }}>{Formik.errors.password}</p>
-                    )}
 
                     <TextField
                         fullWidth
@@ -186,20 +190,25 @@ export default function Register() {
                         value={Formik.values.confirm_password}
                         onChange={Formik.handleChange}
                         onBlur={Formik.handleBlur}
+                        error={Formik.touched.confirm_password && Boolean(Formik.errors.confirm_password)}
+                        helperText={Formik.touched.confirm_password && Formik.errors.confirm_password}
                     />
-                    {Formik.touched.confirm_password && Formik.errors.confirm_password && (
-                        <p style={{ color: "red" }}>{Formik.errors.confirm_password}</p>
-                    )}
 
                     <Box sx={{ marginTop: 2 }}>
-                        <input
-                            type="file"
-                            accept="image/*"
-                            onChange={addImage}
-                            style={{ marginBottom: 10 }}
-                        />
+                        <Button
+                            variant="contained"
+                            component="label"
+                        >
+                            Upload School Image
+                            <input
+                                type="file"
+                                hidden
+                                accept="image/*"
+                                onChange={addImage}
+                            />
+                        </Button>
                         {file && (
-                            <CardMedia component="img" height="150" image={imageUrl} alt="Preview" />
+                            <CardMedia component="img" height="150" image={imageUrl} alt="Preview" sx={{ marginTop: 2, borderRadius: 2 }} />
                         )}
                     </Box>
 
