@@ -12,8 +12,8 @@ import {
   Typography,
 } from "@mui/material";
 import { useFormik } from "formik";
-import apiClient from "../../../../apiClient";
-import { baseUrl } from "../../../environment";
+// 1. ONLY import apiClient
+import apiClient from "../../../../apiClient"; 
 import CustomizedSnackbars from "../../../basic utility components/CustomizedSnackbars";
 import { studentSchema } from "../../../yupSchema/studentSchema";
 import StudentCardAdmin from "../../utility components/student card/StudentCard";
@@ -23,11 +23,9 @@ export default function Students() {
   const [students, setStudents] = useState([]);
   const [isEdit, setEdit] = useState(false);
   const [editId, setEditId] = useState(null);
-
   const [file, setFile] = useState(null);
-  const [imageUrl, setImageUrl] = useState(null); // Independent state for image preview
+  const [imageUrl, setImageUrl] = useState(null);
 
-  // Handle image file selection
   const addImage = (event) => {
     const selectedFile = event.target.files[0];
     if (selectedFile) {
@@ -43,7 +41,6 @@ export default function Students() {
       student_class: e.target.value || undefined,
     }));
   };
-
   const handleSearch = (e) => {
     setParams((prevParams) => ({
       ...prevParams,
@@ -51,10 +48,11 @@ export default function Students() {
     }));
   };
 
+  // 2. ALL functions now use apiClient
   const handleDelete = (id) => {
     if (confirm("Are you sure you want to delete?")) {
-      axios
-        .delete(`${baseUrl}/student/delete/${id}`)
+      apiClient
+        .delete(`/student/delete/${id}`)
         .then((resp) => {
           setMessage(resp.data.message);
           setType("success");
@@ -68,8 +66,8 @@ export default function Students() {
 
   const handleEdit = (id) => {
     setEdit(true);
-    axios
-      .get(`${baseUrl}/student/fetch-single/${id}`)
+    apiClient
+      .get(`/student/fetch-single/${id}`)
       .then((resp) => {
         const data = resp.data.data;
         Formik.setValues({
@@ -82,7 +80,7 @@ export default function Students() {
           guardian_phone: data.guardian_phone,
           password: data.password,
         });
-        setImageUrl(data.image); // Assuming response has `image` URL field for preview
+        setImageUrl(data.image);
         setEditId(data._id);
       })
       .catch(() => console.log("Error in fetching edit data."));
@@ -98,29 +96,23 @@ export default function Students() {
   const resetMessage = () => setMessage("");
 
   const initialValues = {
-    name: "",
-    email: "",
-    student_class: "",
-    gender: "",
-    age: "",
-    guardian: "",
-    guardian_phone: "",
-    password: "",
+    name: "", email: "", student_class: "", gender: "", age: "",
+    guardian: "", guardian_phone: "", password: "",
   };
 
   const Formik = useFormik({
     initialValues,
     validationSchema: studentSchema,
     onSubmit: (values) => {
-      if (isEdit) {
-        const fd = new FormData();
-        Object.keys(values).forEach((key) => fd.append(key, values[key]));
-        if (file) {
-          fd.append("image", file, file.name);
-        }
+      const fd = new FormData();
+      Object.keys(values).forEach((key) => fd.append(key, values[key]));
+      if (file) {
+        fd.append("image", file, file.name);
+      }
 
-        axios
-          .patch(`${baseUrl}/student/update/${editId}`, fd)
+      if (isEdit) {
+        apiClient
+          .patch(`/student/update/${editId}`, fd)
           .then((resp) => {
             setMessage(resp.data.message);
             setType("success");
@@ -133,12 +125,8 @@ export default function Students() {
           });
       } else {
         if (file) {
-          const fd = new FormData();
-          fd.append("image", file, file.name);
-          Object.keys(values).forEach((key) => fd.append(key, values[key]));
-
-          axios
-            .post(`${baseUrl}/student/register`, fd)
+          apiClient
+            .post(`/student/register`, fd)
             .then((resp) => {
               setMessage(resp.data.message);
               setType("success");
@@ -158,8 +146,8 @@ export default function Students() {
   });
 
   const fetchStudentClass = () => {
-    axios
-      .get(`${baseUrl}/class/fetch-all`)
+    apiClient
+      .get(`/class/fetch-all`)
       .then((resp) => {
         setStudentClass(resp.data.data);
       })
@@ -167,8 +155,8 @@ export default function Students() {
   };
 
   const fetchStudents = () => {
-    apiClient // 👈 This is the solution
-      .get("/student/fetch-with-query", { params }) // No need for baseUrl
+    apiClient
+      .get("/student/fetch-with-query", { params })
       .then((resp) => {
         setStudents(resp.data.data);
       })
@@ -180,15 +168,15 @@ export default function Students() {
     fetchStudentClass();
   }, [message, params]);
 
-  //   CLEARING IMAGE FILE REFENCE FROM INPUT
   const fileInputRef = useRef(null);
   const handleClearFile = () => {
     if (fileInputRef.current) {
-      fileInputRef.current.value = ""; // Clear the file input
+      fileInputRef.current.value = "";
     }
-    setFile(null); // Reset the file state
-    setImageUrl(null); // Clear the image preview
+    setFile(null);
+    setImageUrl(null);
   };
+  
   return (
     <>
       {message && (
