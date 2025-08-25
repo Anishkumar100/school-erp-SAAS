@@ -1,6 +1,5 @@
 require("dotenv").config();
 const formidable = require("formidable");
-const fs = require("fs");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
@@ -35,16 +34,15 @@ module.exports = {
             try {
                 if (err) return res.status(400).json({ success: false, message: "Form parsing error" });
 
-                const existing = await Student.find({ email: fields.email[0] });
-                if (existing.length > 0) return res.status(400).json({ success: false, message: "Email already exists" });
+                const existing = await Student.findOne({ email: fields.email[0] });
+                if (existing) return res.status(400).json({ success: false, message: "Email already exists" });
 
                 let studentImageUrl = "";
-                if (files.image) {
+                if (files.image && files.image[0]) {
                     const photo = files.image[0];
-                    const fileBuffer = await fs.promises.readFile(photo.filepath);
 
                     const upload = await imagekit.upload({
-                        file: fileBuffer,
+                        file: photo.filepath, // ✅ direct path instead of fs.readFile
                         fileName: photo.originalFilename.replace(/\s/g, "_"),
                         folder: "/student_images"
                     });
@@ -153,12 +151,11 @@ module.exports = {
 
                 Object.keys(fields).forEach(key => student[key] = fields[key][0]);
 
-                if (files.image) {
+                if (files.image && files.image[0]) {
                     const photo = files.image[0];
-                    const fileBuffer = await fs.promises.readFile(photo.filepath);
 
                     const upload = await imagekit.upload({
-                        file: fileBuffer,
+                        file: photo.filepath, // ✅ no fs
                         fileName: photo.originalFilename.replace(/\s/g, "_"),
                         folder: "/student_images"
                     });

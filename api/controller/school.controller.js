@@ -2,17 +2,21 @@ require("dotenv").config();
 const formidable = require("formidable");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const fs = require("fs");   // ✅ ADD THIS
 const School = require("../model/school.model");
 const imagekit = require("../imageKit");
 
 const jwtSecret = process.env.JWTSECRET;
 
 module.exports = {
-
     getAllSchools: async (req, res) => {
         try {
-            const schools = await School.find().select(['-_id','-password','-email','-owner_name','-createdAt']);
+            const schools = await School.find().select([
+                '-_id',
+                '-password',
+                '-email',
+                '-owner_name',
+                '-createdAt'
+            ]);
             res.status(200).json({ success: true, message: "Fetched all schools successfully", data: schools });
         } catch (error) {
             console.error("Error in getAllSchools:", error);
@@ -27,16 +31,16 @@ module.exports = {
             try {
                 if (err) return res.status(400).json({ success: false, message: "Form parsing error" });
 
-                const existing = await School.find({ email: fields.email[0] });
-                if (existing.length > 0) return res.status(400).json({ success: false, message: "Email already exists" });
+                const existing = await School.findOne({ email: fields.email[0] });
+                if (existing) return res.status(400).json({ success: false, message: "Email already exists" });
 
                 let schoolImageUrl = "";
-                if (files.image) {
+                if (files.image && files.image[0]) {
                     const photo = files.image[0];
-                    const fileBuffer = await fs.promises.readFile(photo.filepath);
 
+                    // upload using file path (ImageKit supports both Buffer and filepath)
                     const upload = await imagekit.upload({
-                        file: fileBuffer,
+                        file: photo.filepath, // 👈 no fs.readFile
                         fileName: photo.originalFilename.replace(/\s/g, "_"),
                         folder: "/school_images"
                     });
@@ -125,12 +129,11 @@ module.exports = {
                 });
 
                 // Update image if provided
-                if (files.image) {
+                if (files.image && files.image[0]) {
                     const photo = files.image[0];
-                    const fileBuffer = await fs.promises.readFile(photo.filepath);
 
                     const upload = await imagekit.upload({
-                        file: fileBuffer,
+                        file: photo.filepath, // 👈 direct path upload
                         fileName: photo.originalFilename.replace(/\s/g, "_"),
                         folder: "/school_images"
                     });
@@ -169,5 +172,4 @@ module.exports = {
             res.status(500).json({ success: false, message: "Server Error while checking login status" });
         }
     }
-
 };
