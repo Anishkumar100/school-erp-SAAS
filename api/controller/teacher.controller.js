@@ -175,9 +175,27 @@ module.exports = {
     });
   },
 
+  
+ // REFACTORED: deleteTeacherWithId
   deleteTeacherWithId: async (req, res) => {
     try {
-      await Teacher.findOneAndDelete({ _id: req.params.id });
+      const teacherId = req.params.id;
+      const schoolId = req.user.schoolId;
+
+      // ADDED: Dependency Check - see if teacher is in use
+      const isAssignedToClass = await Class.findOne({ school: schoolId, "asignSubTeach.teacher": teacherId });
+      const isAssignedToPeriod = await Period.findOne({ school: schoolId, teacher: teacherId });
+
+      if (isAssignedToClass || isAssignedToPeriod) {
+        return res.status(400).json({ success: false, message: "Cannot delete teacher. They are currently assigned to classes or periods." });
+      }
+
+      // SECURITY FIX: Ensure the teacher belongs to the correct school
+      const deletedTeacher = await Teacher.findOneAndDelete({ _id: teacherId, school: schoolId });
+
+      if (!deletedTeacher) {
+        return res.status(404).json({ success: false, message: "Teacher not found." });
+      }
       res.status(200).json({ success: true, message: "Teacher deleted successfully." });
     } catch (error) {
       console.error("Error in deleteTeacherWithId:", error);

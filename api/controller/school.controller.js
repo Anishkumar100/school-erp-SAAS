@@ -113,39 +113,53 @@ module.exports = {
         }
     },
 
+
     updateSchoolWithId: async (req, res) => {
         const form = new formidable.IncomingForm({ keepExtensions: true });
 
         form.parse(req, async (err, fields, files) => {
             try {
-                if (err) return res.status(400).json({ success: false, message: "Form parsing error" });
+                if (err) {
+                    return res.status(400).json({ success: false, message: "Form parsing error" });
+                }
 
-                const school = await School.findById(req.user.id);
-                if (!school) return res.status(404).json({ success: false, message: "School not found" });
+                // 1. Build an object with only the fields you want to update
+                const updateData = {};
+                if (fields.school_name && fields.school_name[0]) {
+                    updateData.school_name = fields.school_name[0];
+                }
+                if (fields.owner_name && fields.owner_name[0]) {
+                    updateData.owner_name = fields.owner_name[0];
+                }
+                // Add other text fields here as needed
 
-                // Update text fields
-                Object.keys(fields).forEach(key => {
-                    school[key] = fields[key][0];
-                });
-
-                // Update image if provided
+                // 2. Handle the image upload if a new file is provided
                 if (files.image && files.image[0]) {
                     const photo = files.image[0];
-
                     const upload = await imagekit.upload({
-                        file: photo.filepath, // 👈 direct path upload
+                        file: photo.filepath,
                         fileName: photo.originalFilename.replace(/\s/g, "_"),
                         folder: "/school_images"
                     });
-                    school.school_image = upload.url;
+                    updateData.school_image = upload.url;
                 }
 
-                await school.save();
-                res.status(200).json({ success: true, message: "School updated successfully", data: school });
+                // 3. Perform a single, atomic update operation
+                const updatedSchool = await School.findByIdAndUpdate(
+                    req.user.id, // Find the school by the logged-in user's ID
+                    { $set: updateData }, // Set the new data
+                    { new: true } // Return the updated document
+                );
+
+                if (!updatedSchool) {
+                    return res.status(404).json({ success: false, message: "School not found" });
+                }
+
+                res.status(200).json({ success: true, message: "School updated successfully", data: updatedSchool });
 
             } catch (error) {
                 console.error("Error in updateSchoolWithId:", error);
-                res.status(500).json({ success: false, message: "Server Error while updating school" });
+                res.status(500).json({ success: false, message: "Server error while updating school" });
             }
         });
     },

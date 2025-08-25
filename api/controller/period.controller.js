@@ -1,127 +1,138 @@
 const Period = require('../model/period.model');
 
-// Create a period
-exports.createPeriod = async (req, res) => {
-  try {
-    const { teacher, subject, classId, startTime, endTime } = req.body;
-    const schoolId = req.user.schoolId;
+module.exports = {
+  // CREATE a period with validation
+  createPeriod: async (req, res) => {
+    try {
+      const { teacher, subject, classId, startTime, endTime } = req.body;
+      const schoolId = req.user.schoolId;
+      const start = new Date(startTime);
+      const end = new Date(endTime);
 
-    const newPeriod = new Period({
-      teacher,
-      subject,
-      class: classId,
-      startTime: new Date(startTime),
-      endTime: new Date(endTime),
-      school: schoolId,
-    });
+      // 1. ✅ Basic time validation
+      if (start >= end) {
+        return res.status(400).json({ success: false, message: 'Start time must be before end time.' });
+      }
 
-    await newPeriod.save();
-    res.status(201).json({ message: 'Period assigned successfully', period: newPeriod });
-  } catch (error) {
-    console.error("Error creating period:", error);
-    res.status(500).json({ message: 'Error creating period', error });
-  }
-};
+      // 2. ✅ Check for overlapping periods for the same teacher OR class
+      const overlappingPeriod = await Period.findOne({
+        school: schoolId,
+        $or: [{ teacher: teacher }, { class: classId }], // Check for either the same teacher or same class
+        // Find a period where the start or end time falls within the new period's range
+        $or: [
+          { startTime: { $lt: end }, endTime: { $gt: start } },
+        ],
+      });
 
-// Get periods for a specific teacher
-exports.getTeacherPeriods = async (req, res) => {
-  try {
-    const schoolId = req.user.schoolId;
-    const { teacherId } = req.params;
-    const periods = await Period.find({ teacher: teacherId, school: schoolId })
-      .populate('class')
-      .populate('subject');
-    res.status(200).json({ periods });
-  } catch (error) {
-    res.status(500).json({ message: 'Error fetching periods', error });
-  }
-};
+      if (overlappingPeriod) {
+        return res.status(409).json({ success: false, message: 'This time slot conflicts with an existing period for the selected teacher or class.' });
+      }
 
-// Get period by ID (with school check ✅)
-exports.getPeriodsWithId = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const schoolId = req.user.schoolId;
+      const newPeriod = new Period({
+        teacher,
+        subject,
+        class: classId,
+        startTime: start,
+        endTime: end,
+        school: schoolId,
+      });
 
-    const period = await Period.findOne({ _id: id, school: schoolId })
-      .populate('class')
-      .populate('subject')
-      .populate('teacher');
-
-    if (!period) {
-      return res.status(404).json({ message: 'Period not found or unauthorized' });
+      await newPeriod.save();
+      res.status(201).json({ success: true, message: 'Period assigned successfully', data: newPeriod });
+    } catch (error) {
+      console.error("Error creating period:", error);
+      res.status(500).json({ success: false, message: 'Server error while creating period' });
     }
+  },
 
-    res.status(200).json({ period });
-  } catch (error) {
-    res.status(500).json({ message: 'Error fetching period by id', error });
-  }
-};
-
-// Get periods for a specific class
-exports.getClassPeriods = async (req, res) => {
-  try {
-    const { classId } = req.params;
-    const schoolId = req.user.schoolId;
-    const periods = await Period.find({ class: classId, school: schoolId })
-      .populate('subject')
-      .populate('teacher');
-    res.status(200).json({ periods });
-  } catch (error) {
-    res.status(500).json({ message: 'Error fetching class periods', error });
-  }
-};
-
-// Get all periods for school
-exports.getPeriods = async (req, res) => {
-  try {
-    const schoolId = req.user.schoolId;
-    const periods = await Period.find({ school: schoolId })
-      .populate('class')
-      .populate('subject')
-      .populate('teacher');
-    res.status(200).json({ periods });
-  } catch (error) {
-    res.status(500).json({ message: 'Error fetching periods', error });
-  }
-};
-
-// Update period (already has school check ✅)
-exports.updatePeriod = async (req, res) => {
-  try {
-    const { startTime, endTime, teacher, subject } = req.body;
-    const periodId = req.params.id;
-
-    const updatedPeriod = await Period.findOneAndUpdate(
-      { _id: periodId, school: req.user.schoolId },
-      { subject, teacher },
-      { new: true }
-    );
-
-    if (!updatedPeriod) {
-      return res.status(404).json({ message: 'Period not found or unauthorized' });
+  // GET periods for a specific teacher
+  getTeacherPeriods: async (req, res) => {
+    try {
+      const { teacherId } = req.params;
+      const periods = await Period.find({ teacher: teacherId, school: req.user.schoolId })
+        .populate('class')
+        .populate('subject');
+      // 3. ✅ Standardized response
+      res.status(200).json({ success: true, data: periods });
+    } catch (error) {
+      res.status(500).json({ success: false, message: 'Error fetching periods' });
     }
+  },
 
-    res.status(200).json({ message: 'Period updated successfully', period: updatedPeriod });
-  } catch (error) {
-    res.status(500).json({ message: 'Error updating period', error });
-  }
-};
+  // GET period by ID
+  getPeriodsWithId: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const period = await Period.findOne({ _id: id, school: req.user.schoolId })
+        .populate('class')
+        .populate('subject')
+        .populate('teacher');
 
-// Delete period (with school check ✅)
-exports.deletePeriod = async (req, res) => {
-  try {
-    const periodId = req.params.id;
-    const schoolId = req.user.schoolId;
-
-    const deleted = await Period.findOneAndDelete({ _id: periodId, school: schoolId });
-
-    if (!deleted) {
-      return res.status(404).json({ message: 'Period not found or unauthorized' });
+      if (!period) {
+        return res.status(404).json({ success: false, message: 'Period not found' });
+      }
+      res.status(200).json({ success: true, data: period });
+    } catch (error) {
+      res.status(500).json({ success: false, message: 'Error fetching period' });
     }
+  },
 
-    res.status(200).json({ message: 'Period deleted successfully' });
-  } catch (error) {
-    res.status(500).json({ message: 'Error deleting period', error });
-  }
+  // GET periods for a specific class
+  getClassPeriods: async (req, res) => {
+    try {
+      const { classId } = req.params;
+      const periods = await Period.find({ class: classId, school: req.user.schoolId })
+        .populate('subject')
+        .populate('teacher');
+      res.status(200).json({ success: true, data: periods });
+    } catch (error) {
+      res.status(500).json({ success: false, message: 'Error fetching class periods' });
+    }
+  },
+
+  // GET all periods for the school
+  getPeriods: async (req, res) => {
+    try {
+      const periods = await Period.find({ school: req.user.schoolId })
+        .populate('class')
+        .populate('subject')
+        .populate('teacher');
+      res.status(200).json({ success: true, data: periods });
+    } catch (error) {
+      res.status(500).json({ success: false, message: 'Error fetching periods' });
+    }
+  },
+
+  // UPDATE a period
+  updatePeriod: async (req, res) => {
+    try {
+      const { teacher, subject } = req.body; // Assuming only these can be updated
+      const updatedPeriod = await Period.findOneAndUpdate(
+        { _id: req.params.id, school: req.user.schoolId },
+        { teacher, subject },
+        { new: true }
+      );
+
+      if (!updatedPeriod) {
+        return res.status(404).json({ success: false, message: 'Period not found' });
+      }
+      res.status(200).json({ success: true, message: 'Period updated successfully', data: updatedPeriod });
+    } catch (error) {
+      res.status(500).json({ success: false, message: 'Error updating period' });
+    }
+  },
+
+  // DELETE a period
+  deletePeriod: async (req, res) => {
+    try {
+      const deletedPeriod = await Period.findOneAndDelete({ _id: req.params.id, school: req.user.schoolId });
+
+      if (!deletedPeriod) {
+        return res.status(404).json({ success: false, message: 'Period not found' });
+      }
+      res.status(200).json({ success: true, message: 'Period deleted successfully' });
+    } catch (error) {
+      res.status(500).json({ success: false, message: 'Error deleting period' });
+    }
+  },
 };
