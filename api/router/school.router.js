@@ -23,7 +23,7 @@ router.post("/login", loginSchool); // Changed to POST for consistency
 
 // ✅ SECURITY FIX: This route should be protected. 
 // Only an 'ADMIN' should probably see all schools.
-router.get("/all", authMiddleware(['ADMIN']), getAllSchools); 
+router.get("/all", authMiddleware(['SCHOOL']), getAllSchools);
 
 router.patch("/update", authMiddleware(['SCHOOL']), updateSchoolWithId);
 router.get("/fetch-single", authMiddleware(['SCHOOL']), getSchoolOwnData);
