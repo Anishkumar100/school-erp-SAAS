@@ -3,15 +3,10 @@ const formidable = require("formidable");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const Teacher = require("../model/teacher.model");
-const ImageKit = require("imagekit");
+const imagekit = require("../imageKit");
 
 const jwtSecret = process.env.JWTSECRET;
 
-const imagekit = new ImageKit({
-  publicKey: process.env.IMAGEKIT_PUBLIC_KEY,
-  privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
-  urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT,
-});
 
 module.exports = {
   getTeacherWithQuery: async (req, res) => {
