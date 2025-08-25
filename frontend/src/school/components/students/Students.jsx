@@ -12,7 +12,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useFormik } from "formik";
-import axios from "axios";
+import apiClient from "../../../../apiClient";
 import { baseUrl } from "../../../environment";
 import CustomizedSnackbars from "../../../basic utility components/CustomizedSnackbars";
 import { studentSchema } from "../../../yupSchema/studentSchema";
@@ -167,8 +167,8 @@ export default function Students() {
   };
 
   const fetchStudents = () => {
-    axios
-      .get(`${baseUrl}/student/fetch-with-query`, { params })
+    apiClient // 👈 This is the solution
+      .get("/student/fetch-with-query", { params }) // No need for baseUrl
       .then((resp) => {
         setStudents(resp.data.data);
       })
