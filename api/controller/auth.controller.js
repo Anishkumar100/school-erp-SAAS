@@ -2,18 +2,23 @@
 const jwt = require('jsonwebtoken');
 
 exports.authCheck = (req, res, next) => {
-  const token = req.header('Authorization')?.replace('Bearer ', '');
-    
-  if (!token) {
-    return res.status(401).json({ message: 'No token, authorization denied' });
-  }
-
   try {
+    let token = req.header('Authorization');
+
+    if (!token) {
+      return res.status(401).json({ message: 'No token, authorization denied' });
+    }
+
+    // Remove "Bearer " if it exists
+    if (token.startsWith('Bearer ')) {
+      token = token.slice(7, token.length).trim();
+    }
+
     const decoded = jwt.verify(token, process.env.JWTSECRET);
-    req.user = decoded; 
-    next(); // ✅ allow request to continue to the controller
+    req.user = decoded; // attach user info
+    next();
   } catch (error) {
-    console.log("Error", error)
+    console.error("JWT Error:", error.message);
     res.status(401).json({ message: 'Token is not valid' });
   }
 };
