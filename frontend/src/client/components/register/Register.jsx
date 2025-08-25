@@ -40,34 +40,28 @@ export default function Register() {
             if (file) {
                 const fd = new FormData();
                 fd.append("image", file, file.name);
+                fd.append("school_name", values.school_name);
+                fd.append("email", values.email);
+                fd.append("owner_name", values.owner_name);
+                fd.append("password", values.password);
 
-                // 👇 Append array-style fields so backend can access fields.xxx[0]
-                fd.append("school_name[]", values.school_name);
-                fd.append("email[]", values.email);
-                fd.append("owner_name[]", values.owner_name);
-                fd.append("password[]", values.password);
-                fd.append("confirm_password[]", values.confirm_password);
-
-                axios.post(`${baseUrl}/school/register`, fd)
-                    .then(resp => {
-                        setMessage(resp.data.message);
-                        setType("success");
-                        setFile(null);
-                        Formik.resetForm();
-                        setTimeout(() => {
-                            navigate("/");
-                        }, 2000);
-                    })
-                    .catch(e => {
-                        setMessage(e.response?.data?.message || "Something went wrong");
-                        setType("error");
-                    });
+                axios.post(`${baseUrl}/school/register`, fd).then(resp => {
+                    setMessage(resp.data.message);
+                    setType("success");
+                    setFile(null);
+                    Formik.resetForm();
+                    setTimeout(() => {
+                        navigate("/");
+                    }, 2000); // waits 2 seconds before redirect
+                }).catch(e => {
+                    setMessage(e.response.data.message);
+                    setType("error");
+                });
             } else {
                 setMessage("Please Provide An Image.");
                 setType("error");
             }
         }
-
     });
 
     return (

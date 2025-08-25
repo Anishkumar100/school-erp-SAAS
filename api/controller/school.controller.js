@@ -1,7 +1,8 @@
 require("dotenv").config();
 const formidable = require("formidable");
 const bcrypt = require("bcryptjs");
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
+const fs = require("fs");   // ✅ ADD THIS
 const School = require("../model/school.model");
 const imagekit = require("../imageKit");
 
