@@ -1,8 +1,12 @@
 // middleware/authMiddleware.js
 const jwt = require('jsonwebtoken');
 
-const authMiddleware =(roles=[])=>{return (req, res, next) => {
-    const token = req.header('Authorization')?.replace('Bearer ', '');
+const authMiddleware = (roles = []) => {
+  return (req, res, next) => {
+    const authHeader = req.header('Authorization');
+    const token = authHeader && authHeader.startsWith("Bearer ")
+      ? authHeader.slice(7)
+      : null;
 
     if (!token) {
       return res.status(401).json({ message: 'No token, authorization denied' });
@@ -10,20 +14,18 @@ const authMiddleware =(roles=[])=>{return (req, res, next) => {
 
     try {
       const decoded = jwt.verify(token, process.env.JWTSECRET);
-      req.user = decoded; // Attach the decoded token to the request object
-      // Check if the user's role is allowed to access the route
-      if (roles.length && !roles.includes(req.user.role)) {
+      req.user = decoded; 
+
+      if (roles.length > 0 && !roles.includes(req.user.role)) {
         return res.status(403).json({ message: 'Access denied' });
       }
 
-      next(); // Call the next middleware or route handler
+      next();
     } catch (error) {
-        console.log("Error", error)
+      console.error("JWT Error:", error.message);
       res.status(401).json({ message: 'Token is not valid' });
     }
   };
-}
-
+};
 
 module.exports = authMiddleware;
-

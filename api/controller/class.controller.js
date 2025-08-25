@@ -157,7 +157,7 @@ module.exports = {
     },
     getAttendeeTeacher: async(req, res)=>{
         try {
-            let attendeeClass =await Class.find({attendee:req.user.id});
+            let attendeeClass =await Class.find({attendee:req.user.schoolId});
            attendeeClass = attendeeClass.map(x=>{
           return {class_num:x.class_num,class_text: x.class_text,classId: x._id}
         })
