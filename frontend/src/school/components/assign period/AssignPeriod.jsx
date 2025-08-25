@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Container, TextField, Button, Select, MenuItem, InputLabel, FormControl } from '@mui/material';
-import axios from 'axios';
-import { baseUrl } from '../../../environment';
+// 1. Import apiClient instead of axios
+import apiClient from '../../../apiClient'; // Adjust path if needed
 
 const AssignPeriod = () => {
   const [teachers, setTeachers] = useState([]);
   const [classes, setClasses] = useState([]);
-  const [subjects, setSubjects] = useState([])
+  const [subjects, setSubjects] = useState([]);
   const [teacher, setTeacher] = useState('');
   const [subject, setSubject] = useState('');
   const [classId, setClassId] = useState('');
@@ -16,12 +16,18 @@ const AssignPeriod = () => {
   useEffect(() => {
     // Fetch teachers and classes
     const fetchData = async () => {
-      const teacherResponse = await axios.get(`${baseUrl}/teacher/fetch-with-query`,{params:{}});
-      const classResponse = await axios.get(`${baseUrl}/class/fetch-all`);
-      const subjectResponse = await axios.get(`${baseUrl}/subject/fetch-all`,{params:{}})
-      setSubjects(subjectResponse.data.data)
-      setTeachers(teacherResponse.data.data);
-      setClasses(classResponse.data.data);
+      try {
+        // 2. Use apiClient for all requests
+        const teacherResponse = await apiClient.get('/teacher/fetch-with-query', { params: {} });
+        const classResponse = await apiClient.get('/class/fetch-all');
+        const subjectResponse = await apiClient.get('/subject/fetch-all', { params: {} });
+        
+        setSubjects(subjectResponse.data.data);
+        setTeachers(teacherResponse.data.data);
+        setClasses(classResponse.data.data);
+      } catch (error) {
+        console.error("Error fetching initial data:", error);
+      }
     };
     fetchData();
   }, []);
@@ -29,7 +35,8 @@ const AssignPeriod = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(`${baseUrl}/period/create`, {
+      // 3. Use apiClient here as well
+      await apiClient.post('/period/create', {
         teacher,
         subject,
         classId,
@@ -39,6 +46,7 @@ const AssignPeriod = () => {
       alert('Period assigned successfully');
     } catch (error) {
       console.error('Error assigning period:', error);
+      alert('Failed to assign period. Check console for details.');
     }
   };
 
@@ -55,8 +63,6 @@ const AssignPeriod = () => {
           </Select>
         </FormControl>
 
-        {/* <TextField label="Subject" fullWidth value={subject} onChange={(e) => setSubject(e.target.value)} required /> */}
-
         <FormControl fullWidth margin="normal">
           <InputLabel>Subject</InputLabel>
           <Select value={subject} onChange={(e) => setSubject(e.target.value)} required>
@@ -65,7 +71,6 @@ const AssignPeriod = () => {
             ))}
           </Select>
         </FormControl>
-
 
         <FormControl fullWidth margin="normal">
           <InputLabel>Class</InputLabel>
@@ -80,23 +85,25 @@ const AssignPeriod = () => {
           label="Start Time"
           type="datetime-local"
           fullWidth
-          // InputLabelProps={{ shrink: true }}
           value={startTime}
           onChange={(e) => setStartTime(e.target.value)}
           required
+          InputLabelProps={{ shrink: true }} // Added for better UI
+          style={{ marginTop: '16px' }} // Added for spacing
         />
 
         <TextField
           label="End Time"
           type="datetime-local"
           fullWidth
-          // InputLabelProps={{ shrink: true }}
           value={endTime}
           onChange={(e) => setEndTime(e.target.value)}
           required
+          InputLabelProps={{ shrink: true }} // Added for better UI
+          style={{ marginTop: '16px' }} // Added for spacing
         />
 
-        <Button type="submit" variant="contained" color="primary">
+        <Button type="submit" variant="contained" color="primary" style={{ marginTop: '16px' }}>
           Assign Period
         </Button>
       </form>
