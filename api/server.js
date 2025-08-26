@@ -33,7 +33,7 @@ app.use(cors({
 
 // Connect to MongoDB once
 
-connectToDatabase(process.env.MONGO_URI || `mongodb+srv://akcoder1102004:ak@schoolmanagement.9ltii0g.mongodb.net/?retryWrites=true&w=majority&appName=schoolManagement`)
+connectToDatabase(process.env.MONGO_URL || `mongodb+srv://akcoder1102004:ak@schoolmanagement.9ltii0g.mongodb.net/?retryWrites=true&w=majority&appName=schoolManagement`)
   .then(() => console.log("MongoDB Connected Successfully"))
   .catch((e) => console.log("MongoDB Connection Error", e));
 
