@@ -3,7 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
-import axios from 'axios';
+// 1. Import apiClient instead of axios
+import apiClient from '../../../../apiClient'; // Adjust path if needed
 import {
   FormControl,
   MenuItem,
@@ -11,8 +12,8 @@ import {
   Container,
   Typography,
   Select,
+  InputLabel,
 } from '@mui/material';
-import { baseUrl } from '../../../environment';
 
 const localizer = momentLocalizer(moment);
 
@@ -32,18 +33,21 @@ const eventStyleGetter = (event) => {
 const Schedule = () => {
   const [events, setEvents] = useState([]);
   const [allClasses, setAllClasses] = useState([]);
-  const [selectedClass, setSelectedClass] = useState(null);
+  const [selectedClass, setSelectedClass] = useState('');
 
-  // Fetch all classes
+  // Fetch all classes assigned to the teacher
   const fetchAllClasses = () => {
-    axios
-      .get(`${baseUrl}/class/fetch-all`)
+    // 2. Use apiClient for all requests
+    apiClient
+      .get(`/class/attendee`) // Fetches classes assigned to the logged-in teacher
       .then((resp) => {
-        setAllClasses(resp.data.data);
-        setSelectedClass(resp.data.data[0]._id);
+        setAllClasses(resp.data);
+        if (resp.data.length > 0) {
+          setSelectedClass(resp.data[0].classId);
+        }
       })
       .catch((e) => {
-        console.error('Error in fetching all Classes');
+        console.error('Error in fetching assigned classes:', e);
       });
   };
 
@@ -56,11 +60,11 @@ const Schedule = () => {
     const fetchClassPeriods = async () => {
       if (!selectedClass) return;
       try {
-        const response = await axios.get(`${baseUrl}/period/class/${selectedClass}`);
-        const periods = response.data.periods;
+        const response = await apiClient.get(`/period/class/${selectedClass}`);
+        const periods = response.data.data || []; // Use .data from standardized response
         const eventsData = periods.map((period) => ({
           id: period._id,
-          title: `${period.subject.subject_name} By ${period.teacher.name}`,
+          title: `${period.subject?.subject_name || 'N/A'} By ${period.teacher?.name || 'N/A'}`,
           start: new Date(period.startTime),
           end: new Date(period.endTime),
         }));

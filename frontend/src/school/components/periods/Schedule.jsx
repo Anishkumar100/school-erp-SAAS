@@ -3,8 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
-import axios from 'axios';
-import { baseUrl } from '../../../environment';
+// 1. Import apiClient instead of axios
+import apiClient from '../../../../apiClient'; // Adjust path if needed
 import {
   FormControl,
   InputLabel,
@@ -16,7 +16,6 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  TextField,
   Container,
   Typography,
 } from '@mui/material';
@@ -36,43 +35,32 @@ const eventStyleGetter = (event, start, end, isSelected) => {
   };
 };
 
-
-const periods = [
-  { id: 1, label: 'Period 1 (10:00 AM - 11:00 AM)', startTime: '10:00', endTime: '11:00' },
-  { id: 2, label: 'Period 2 (11:00 AM - 12:00 PM)', startTime: '11:00', endTime: '12:00' },
-  { id: 3, label: 'Period 3 (12:00 PM - 1:00 PM)', startTime: '12:00', endTime: '13:00' },
-  { id: 4, label: 'Lunch Break (1:00 PM - 2:00 PM)', startTime: '13:00', endTime: '14:00' }, // break
-  { id: 5, label: 'Period 4 (2:00 PM - 3:00 PM)', startTime: '14:00', endTime: '15:00' },
-  { id: 6, label: 'Period 5 (3:00 PM - 4:00 PM)', startTime: '15:00', endTime: '16:00' },
-];
-
 const Schedule = () => {
   const [events, setEvents] = useState([]);
   const [allClasses, setAllClasses] = useState([]);
-  const [allTeachers, setAllTeachers] = useState([]);
-  const [selectedClass, setSelectedClass] = useState(null);
+  const [selectedClass, setSelectedClass] = useState('');
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [openAddDialog, setOpenAddDialog] = useState(false);
 
   // Fetch all classes
   const fetchAllClasses = () => {
-    axios
-      .get(`${baseUrl}/class/fetch-all`)
+    // 2. Use apiClient for requests
+    apiClient
+      .get(`/class/fetch-all`)
       .then((resp) => {
         setAllClasses(resp.data.data);
-        setSelectedClass(resp.data.data[0]._id);
+        if (resp.data.data.length > 0) {
+          setSelectedClass(resp.data.data[0]._id);
+        }
       })
       .catch((e) => {
         console.error('Error in fetching all Classes');
       });
   };
 
-  
-
   useEffect(() => {
     fetchAllClasses();
-    // fetchAllTeachers();
   }, []);
 
   // Fetch periods for the selected class
@@ -80,12 +68,12 @@ const Schedule = () => {
     const fetchClassPeriods = async () => {
       if (!selectedClass) return;
       try {
-        const response = await axios.get(`${baseUrl}/period/class/${selectedClass}`);
-        const periods = response.data.periods;
-        console.log(periods)
+        // 3. Use apiClient for requests
+        const response = await apiClient.get(`/period/class/${selectedClass}`);
+        const periods = response.data.data || []; // Use .data from standardized response
         const eventsData = periods.map((period) => ({
           id: period._id,
-          title:`${period.subject?period.subject.subject_name:""}, By ${period.teacher?period.teacher.name:""}`,
+          title: `${period.subject?.subject_name || 'N/A'}, By ${period.teacher?.name || 'N/A'}`,
           start: new Date(period.startTime),
           end: new Date(period.endTime)
         }));
@@ -96,7 +84,7 @@ const Schedule = () => {
     };
 
     fetchClassPeriods();
-  }, [selectedClass,openDialog,openAddDialog]);
+  }, [selectedClass, openDialog, openAddDialog]);
 
   const handleClassChange = (e) => {
     setSelectedClass(e.target.value);
@@ -113,14 +101,12 @@ const Schedule = () => {
   };
 
   const handleOpenAddDialog = () => {
-    
     setOpenAddDialog(true);
   };
 
   const handleCloseAddDialog = () => {
     setOpenAddDialog(false);
   };
-
 
   return (
   <Container>

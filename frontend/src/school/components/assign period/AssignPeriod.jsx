@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, TextField, Button, Select, MenuItem, InputLabel, FormControl } from '@mui/material';
 // 1. Import apiClient instead of axios
-import apiClient from '../../../apiClient'; // Adjust path if needed
+import apiClient from '../../../../apiClient'; // Adjust path if needed
 
 const AssignPeriod = () => {
   const [teachers, setTeachers] = useState([]);

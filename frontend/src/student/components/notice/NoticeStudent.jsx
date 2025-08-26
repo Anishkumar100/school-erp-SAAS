@@ -1,21 +1,19 @@
 import { useEffect, useState } from "react";
-import { Box, Button, MenuItem, Paper, Select, TextField, Typography } from "@mui/material";
-import axios from "axios";
-import { baseUrl } from "../../../environment";
+import { Box, Paper, Typography } from "@mui/material";
+// 1. Import apiClient instead of axios
+import apiClient from "../../../../apiClient"; // Adjust path if needed
+import NoData from "../../../basic utility components/NoData";
 
 const NoticeStudent = () => {
- 
-
- 
-
-
   const [notices, setNotices] = useState([]);
 
   useEffect(() => {
     const fetchNotices = async () => {
       try {
-        const response = await axios.get(`${baseUrl}/notices/fetch/${'student'}`);
-        setNotices(response.data);
+        // 2. Use apiClient for the authenticated request
+        const response = await apiClient.get(`/notices/fetch/student`);
+        // The backend now wraps data in a 'data' property
+        setNotices(response.data.data || []);
       } catch (error) {
         console.error("Error fetching notices", error);
       }
@@ -23,7 +21,8 @@ const NoticeStudent = () => {
     fetchNotices();
   }, []);
 
-  return (<>
+  return (
+  <>
    
     <Box>
       <Typography sx={{margin:'auto', textAlign:"center"}} variant="h3">Notice Board</Typography>

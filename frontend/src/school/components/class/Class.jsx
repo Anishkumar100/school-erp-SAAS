@@ -6,7 +6,6 @@ import {
   MenuItem,
   Select,
   Button,
-  CardMedia,
   Paper,
   TextField,
   Typography,
@@ -18,14 +17,11 @@ import {
   TableContainer,
   IconButton,
 } from "@mui/material";
-import dayjs from "dayjs";
 import { useFormik } from "formik";
 import { useEffect, useState } from "react";
-import axios from "axios";
-import { baseUrl } from "../../../environment";
+// 1. Import apiClient instead of axios
+import apiClient from "../../../../apiClient"; // Adjust path if needed
 import CustomizedSnackbars from "../../../basic utility components/CustomizedSnackbars";
-import { studentSchema } from "../../../yupSchema/studentSchema";
-import StudentCardAdmin from "../../utility components/student card/StudentCard";
 import { classSchema } from "../../../yupSchema/classSchema";
 import { Link } from "react-router-dom";
 
@@ -37,15 +33,11 @@ export default function Class() {
   const [isEdit, setEdit] = useState(false);
   const [editId, setEditId] = useState(null);
 
-
- 
-
-  
-
+  // 2. All functions now use apiClient
   const handleDelete = (id) => {
     if (confirm("Are you sure you want to delete?")) {
-      axios
-        .delete(`${baseUrl}/class/delete/${id}`)
+      apiClient
+        .delete(`/class/delete/${id}`)
         .then((resp) => {
           setMessage(resp.data.message);
           setType("success");
@@ -53,33 +45,31 @@ export default function Class() {
         .catch((e) => {
           setMessage(e.response.data.message);
           setType("error");
-          console.log("Error, deleting", e);
         });
     }
   };
+
   const handleEdit = (id) => {
-    console.log("Handle  Edit is called", id);
     setEdit(true);
-    axios
-      .get(`${baseUrl}/class/fetch-single/${id}`)
+    apiClient
+      .get(`/class/fetch-single/${id}`)
       .then((resp) => {
         Formik.setFieldValue("class_num", resp.data.data.class_num);
         Formik.setFieldValue("class_text", resp.data.data.class_text);
         setEditId(resp.data.data._id);
       })
       .catch((e) => {
-        console.log("Error  in fetching edit data.");
+        console.log("Error in fetching edit data.");
       });
   };
 
   const cancelEdit = () => {
     setEdit(false);
-    Formik.resetForm()
+    Formik.resetForm();
   };
 
-  //   MESSAGE
   const [message, setMessage] = useState("");
-  const [type, setType] = useState("succeess");
+  const [type, setType] = useState("success");
 
   const resetMessage = () => {
     setMessage("");
@@ -87,20 +77,17 @@ export default function Class() {
 
   const initialValues = {
     class_num: "",
-    class_text:""
+    class_text: ""
   };
+
   const Formik = useFormik({
     initialValues: initialValues,
     validationSchema: classSchema,
     onSubmit: (values) => {
       if (isEdit) {
-        console.log("edit id", editId);
-        axios
-          .patch(`${baseUrl}/class/update/${editId}`, {
-            ...values,
-          })
+        apiClient
+          .patch(`/class/update/${editId}`, values)
           .then((resp) => {
-            console.log("Edit submit", resp);
             setMessage(resp.data.message);
             setType("success");
             cancelEdit();
@@ -108,58 +95,38 @@ export default function Class() {
           .catch((e) => {
             setMessage(e.response.data.message);
             setType("error");
-            console.log("Error, edit casting submit", e);
           });
       } else {
-      
-          axios
-            .post(`${baseUrl}/class/create`,{...values})
-            .then((resp) => {
-              console.log("Response after submitting admin casting", resp);
-              setMessage(resp.data.message);
-              setType("success");
-            })
-            .catch((e) => {
-              setMessage(e.response.data.message);
-              setType("error");
-              console.log("Error, response admin casting calls", e);
-            });
-          Formik.resetForm();
-        
+        apiClient
+          .post(`/class/create`, values)
+          .then((resp) => {
+            setMessage(resp.data.message);
+            setType("success");
+            Formik.resetForm();
+          })
+          .catch((e) => {
+            setMessage(e.response.data.message);
+            setType("error");
+          });
       }
     },
   });
 
-  const [month, setMonth] = useState([]);
-  const [year, setYear] = useState([]);
-  const fetchStudentClass = () => {
-    // axios
-    //   .get(`${baseUrl}/casting/get-month-year`)
-    //   .then((resp) => {
-    //     console.log("Fetching month and year.", resp);
-    //     setMonth(resp.data.month);
-    //     setYear(resp.data.year);
-    //   })
-    //   .catch((e) => {
-    //     console.log("Error in fetching month and year", e);
-    //   });
-  };
-
-  const fetchstudentsClass = () => {
-    axios
-      .get(`${baseUrl}/class/fetch-all`)
+  const fetchStudentClasses = () => {
+    apiClient
+      .get(`/class/fetch-all`)
       .then((resp) => {
-        console.log("Fetching data in  Casting Calls  admin.", resp);
         setStudentClass(resp.data.data);
       })
       .catch((e) => {
-        console.log("Error in fetching casting calls admin data", e);
+        console.log("Error in fetching classes data", e);
       });
   };
+
   useEffect(() => {
-    fetchstudentsClass();
-    fetchStudentClass();
+    fetchStudentClasses();
   }, [message]);
+
   return (
     <>
       {message && (
@@ -180,18 +147,12 @@ export default function Class() {
         >
           <Typography className="text-beautify2 hero-text" variant="h2">Class</Typography>
         </Box>
-  
+
         <Box component={"div"} sx={{ display: 'flex', justifyContent: 'center', px: 2 }}>
           <Paper sx={{ padding: "30px", width: "100%", maxWidth: "600px", borderRadius: "16px" }}>
-            {isEdit ? (
-              <Typography variant="h4" sx={{ fontWeight: "800", textAlign: "center" }}>
-                Edit Class
-              </Typography>
-            ) : (
-              <Typography variant="h4" sx={{ fontWeight: "800", textAlign: "center" }}>
-                Add New Class
-              </Typography>
-            )}
+            <Typography variant="h4" sx={{ fontWeight: "800", textAlign: "center" }}>
+              {isEdit ? "Edit Class" : "Add New Class"}
+            </Typography>
             <Box component="form" noValidate autoComplete="off" onSubmit={Formik.handleSubmit}>
               <TextField
                 fullWidth
@@ -202,12 +163,9 @@ export default function Class() {
                 value={Formik.values.class_text}
                 onChange={Formik.handleChange}
                 onBlur={Formik.handleBlur}
+                error={Formik.touched.class_text && Boolean(Formik.errors.class_text)}
+                helperText={Formik.touched.class_text && Formik.errors.class_text}
               />
-              {Formik.touched.class_text && Formik.errors.class_text && (
-                <p style={{ color: "red", textTransform: "capitalize" }}>
-                  {Formik.errors.class_text}
-                </p>
-              )}
               <TextField
                 fullWidth
                 sx={{ marginTop: "10px" }}
@@ -217,12 +175,9 @@ export default function Class() {
                 value={Formik.values.class_num}
                 onChange={Formik.handleChange}
                 onBlur={Formik.handleBlur}
+                error={Formik.touched.class_num && Boolean(Formik.errors.class_num)}
+                helperText={Formik.touched.class_num && Formik.errors.class_num}
               />
-              {Formik.touched.class_num && Formik.errors.class_num && (
-                <p style={{ color: "red", textTransform: "capitalize" }}>
-                  {Formik.errors.class_num}
-                </p>
-              )}
               <Box sx={{ marginTop: "10px" }}>
                 <Button type="submit" sx={{ marginRight: "10px" }} variant="contained">
                   Submit
@@ -236,12 +191,12 @@ export default function Class() {
             </Box>
           </Paper>
         </Box>
-  
+
         <Box sx={{ mt: 4 }}>
           <Typography variant="h5" sx={{ fontWeight: "bold", mb: 2, textAlign: "center" }}>
             Added Classes
           </Typography>
-  
+
           <Box
             sx={{
               display: "flex",
@@ -281,5 +236,4 @@ export default function Class() {
       </Box>
     </>
   );
-  
 }

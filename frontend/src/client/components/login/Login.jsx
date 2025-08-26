@@ -12,7 +12,7 @@ import {
 import { useFormik } from "formik";
 import { loginSchema } from "../../../yupSchema/loginSchema";
 import axios from "axios";
-import { baseUrl } from "../../../environment";
+import { baseUrl } from "../../../../environment";
 import CustomizedSnackbars from "../../../basic utility components/CustomizedSnackbars";
 import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";

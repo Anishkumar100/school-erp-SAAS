@@ -1,7 +1,7 @@
 // src/apiClient.js
 
 import axios from 'axios';
-import { baseUrl } from './environment'; // Import your baseUrl
+import { baseUrl } from "./environment" // Import your baseUrl
 
 // Create a configured instance of axios
 const apiClient = axios.create({

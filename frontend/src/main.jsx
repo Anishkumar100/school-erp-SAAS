@@ -9,9 +9,9 @@ import { AuthProvider } from './context/AuthContext.jsx';
 // All authenticated API calls should use the 'apiClient.js' instance instead.
 
 createRoot(document.getElementById('root')).render(
-  <StrictMode>
+
     <AuthProvider>
       <App />
     </AuthProvider>
-  </StrictMode>
+ 
 );

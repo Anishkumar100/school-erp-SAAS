@@ -20,7 +20,7 @@ import TableRow from "@mui/material/TableRow";
 import { useEffect, useState } from "react";
 import { useFormik } from "formik";
 // 1. Import apiClient instead of axios
-import apiClient from "../../../apiClient"; // Adjust path if needed
+import apiClient from "../../../../apiClient"; // Adjust path if needed
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
 import dayjs from "dayjs";
@@ -210,7 +210,61 @@ export default function Examinations() {
           </Typography>
           <Box component="form" onSubmit={examFormik.handleSubmit} noValidate autoComplete="off">
             <Grid container spacing={2}>
-              {/* Fields for the form */}
+              <Grid item xs={12} md={4}>
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                  <DemoContainer components={["DatePicker"]}>
+                    <DatePicker
+                      label="Exam Date"
+                      name="exam_date"
+                      value={dayjs(examFormik.values.exam_date)}
+                      onChange={(e) => examFormik.setFieldValue("exam_date", dayjs(e))}
+                    />
+                  </DemoContainer>
+                </LocalizationProvider>
+              </Grid>
+
+              <Grid item xs={12} md={4}>
+                <FormControl fullWidth>
+                  <InputLabel>Subject</InputLabel>
+                  <Select
+                    label="Subject"
+                    name="subject"
+                    value={examFormik.values.subject}
+                    onChange={examFormik.handleChange}
+                    onBlur={examFormik.handleBlur}
+                  >
+                    <MenuItem value="">Select Subject</MenuItem>
+                    {allSubjects &&
+                      allSubjects.map((subject, i) => (
+                        <MenuItem key={i} value={subject._id}>
+                          {subject.subject_name}
+                        </MenuItem>
+                      ))}
+                  </Select>
+                  {examFormik.touched.subject && examFormik.errors.subject && (
+                    <Typography color="error" variant="caption">
+                      {examFormik.errors.subject}
+                    </Typography>
+                  )}
+                </FormControl>
+              </Grid>
+
+              <Grid item xs={12} md={4}>
+                <TextField
+                  fullWidth
+                  label="Exam Type"
+                  name="exam_type"
+                  value={examFormik.values.exam_type}
+                  onChange={examFormik.handleChange}
+                  onBlur={examFormik.handleBlur}
+                  placeholder="(1st Semester, Half yearly etc)"
+                />
+                {examFormik.touched.exam_type && examFormik.errors.exam_type && (
+                  <Typography color="error" variant="caption">
+                    {examFormik.errors.exam_type}
+                  </Typography>
+                )}
+              </Grid>
             </Grid>
             <Box sx={{ mt: 3, display: "flex", gap: 2 }}>
               <Button type="submit" variant="contained" color="primary">Submit</Button>

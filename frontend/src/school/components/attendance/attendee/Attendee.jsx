@@ -2,112 +2,81 @@
 import {
     Box,
     Button,
-    CardMedia,
     FormControl,
     InputLabel,
     MenuItem,
     Paper,
     Select,
-    styled,
-    TextField,
     Typography,
-  } from "@mui/material";
-  import Grid from "@mui/material/Grid2";
-  
-  import Table from "@mui/material/Table";
-  import TableBody from "@mui/material/TableBody";
-  import TableCell from "@mui/material/TableCell";
-  import TableContainer from "@mui/material/TableContainer";
-  import TableHead from "@mui/material/TableHead";
-  import TableRow from "@mui/material/TableRow";
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableRow,
+} from "@mui/material";
 import { useFormik } from "formik";
 import { useEffect, useState } from "react";
-import axios from "axios";
-import { baseUrl } from "../../../../environment";
+// 1. Import apiClient instead of axios
+import apiClient from "../../../../../apiClient"; // Adjust path if needed
 
-
-export default function Attendee({ classId, handleMessage,params}){
-    const [iseditAttendee, seteditAttendee] = useState(false)
-    const [attendee, setAttendee] = useState(null)
-  
-
+export default function Attendee({ classId, handleMessage, params }) {
+    const [isEditAttendee, setEditAttendee] = useState(false);
+    const [attendee, setAttendee] = useState(null);
     const [allTeachers, setAllTeachers] = useState([]);
-    const fetchAllTeachers = () => {
-      axios
-        .get(`${baseUrl}/teacher/fetch-with-query`, { params: {} })
-        .then((resp) => {
-          console.log("ALL subjects", resp);
-          setAllTeachers(resp.data.data);
-        })
-        .catch((e) => {
-          console.log("Error in fetching  all  Classes");
+
+    // 2. All functions now use apiClient
+    const fetchClassAndTeachers = () => {
+        if (!classId) return;
+        Promise.all([
+            apiClient.get(`/teacher/fetch-with-query`, { params: {} }),
+            apiClient.get(`/class/fetch-single/${classId}`)
+        ]).then(([teacherResp, classResp]) => {
+            setAllTeachers(teacherResp.data.data);
+            const classData = classResp.data.data;
+            if (classData.attendee) {
+                setAttendee(classData.attendee.name);
+                Formik.setFieldValue("attendee", classData.attendee._id);
+            } else {
+                setAttendee("");
+                Formik.setFieldValue("attendee", "");
+            }
+        }).catch(e => {
+            console.error("Error fetching data:", e);
         });
     };
 
-
-    const canceleditAttendee = () => {
-        seteditAttendee(false);
-      };
-     
-    const handleeditAttendee = () => {
-      seteditAttendee(true);
+    const cancelEditAttendee = () => {
+        setEditAttendee(false);
     };
 
-    const initialValues = {
-        attendee:""
-      };
-      const Formik = useFormik({
-        initialValues: initialValues,
+    const handleEditAttendee = () => {
+        setEditAttendee(true);
+    };
+
+    const Formik = useFormik({
+        initialValues: { attendee: "" },
         onSubmit: (values) => {
-          axios
-            .patch(`${baseUrl}/class/update/${classId}`, { ...values })
-            .then((resp) => {
-              handleMessage("success",resp.data.message);
-              canceleditAttendee()
-            })
-            .catch((e) => {
-              handleMessage("error",e.response.data.message);
-              canceleditAttendee()
-              console.log("Error  in submit edit", e);
-            });
+            apiClient
+                .patch(`/class/update/${classId}`, values)
+                .then((resp) => {
+                    handleMessage("success", resp.data.message);
+                    cancelEditAttendee();
+                })
+                .catch((e) => {
+                    handleMessage("error", e.response?.data?.message || "Failed to update attendee.");
+                    cancelEditAttendee();
+                });
         },
-      });
+    });
 
-      const [classDetails, setClassDetails] = useState(null)
-      const fetchClassWithId = () => {
-      
-        if (classId) {
-         
-          axios
-            .get(`${baseUrl}/class/fetch-single/${classId}`)
-            .then((resp) => {
-              console.log("Single class", resp.data.data);
-              setClassDetails(resp.data.data);
-              if(resp.data.data.attendee){
-                setAttendee(resp.data.data.attendee.name)
-              }else{
-                setAttendee("")
-              }
-              
-            })
-            .catch((e) => {
-            //   navigate("/school/class");
-              console.log("Error in fetching.");
-            });
-        } 
-      };
+    useEffect(() => {
+        fetchClassAndTeachers();
+    }, [isEditAttendee, classId, params, handleMessage]);
 
-      
-
-
-      useEffect(()=>{
-        fetchAllTeachers();
-       fetchClassWithId();
-      },[iseditAttendee,classId,params])
     return (
         <>
           
-             {iseditAttendee && (
+             {isEditAttendee && (
                 <Paper sx={{ padding: "20px", margin: "10px" }}>
                   <Typography
                     sx={{
@@ -157,7 +126,7 @@ export default function Attendee({ classId, handleMessage,params}){
                       <Button
                         sx={{ background: "tomato", color: "#fff" }}
                         variant="contained"
-                        onClick={canceleditAttendee}
+                        onClick={cancelEditAttendee}
                       >
                         Cancel
                       </Button>
@@ -204,7 +173,7 @@ export default function Attendee({ classId, handleMessage,params}){
                     marginTop: "20px",
                   }}
                 >
-                  <Button variant="outlined" onClick={handleeditAttendee}>
+                  <Button variant="outlined" onClick={handleEditAttendee}>
                     {attendee? "Change Attendee":"Add Attendee"}
                   </Button>
                 </Box>

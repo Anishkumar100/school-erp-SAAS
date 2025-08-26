@@ -1,86 +1,75 @@
-import axios from "axios";
 import { useEffect, useState } from "react";
-import { baseUrl } from "../../../environment";
-import { Box, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
+// 1. Import apiClient instead of axios
+import apiClient from "../../../../apiClient.js"; // Adjust path if needed
+import { Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
 import { convertDate } from "../../../utilityFunctions";
 
-export default function StudentExaminations(){
-    
-  
-    // const [classId, setClassId] = useState(null)
+export default function StudentExaminations() {
     const [examinations, setExaminations] = useState([]);
-    const [classDetails, setClassDetails] = useState(null)
+    const [classDetails, setClassDetails] = useState(null);
+
     const fetchExaminations = (classId) => {
-      axios
-        .get(`${baseUrl}/examination/fetch-class/${classId}`)
-        .then((resp) => {
-          console.log("ALL Examination", resp);
-          setExaminations(resp.data.data);
-        })
-        .catch((e) => {
-          console.log("Error in fetching  Examinstions.");
-        });
+        // 2. Use apiClient for the request
+        apiClient
+            .get(`/examination/fetch-class/${classId}`) // No baseUrl needed
+            .then((resp) => {
+                setExaminations(resp.data.data);
+            })
+            .catch((e) => {
+                console.log("Error in fetching Examinations:", e);
+            });
     };
 
-    const getStudentDetails = ()=>{
-      axios.get(`${baseUrl}/student/fetch-own`).then(resp=>{
-          fetchExaminations(resp.data.data.student_class._id);
-          setClassDetails({id:resp.data.data.student_class._id, class:resp.data.data.student_class.class_text})
-  console.log("student",  resp)
-      }).catch(e=>{
-          console.log("Error in student", e)
-      })
-  }
+    const getStudentDetails = () => {
+        // 3. Use apiClient for this request as well
+        apiClient
+            .get(`/student/fetch-own`) // No baseUrl needed
+            .then(resp => {
+                if (resp.data.data && resp.data.data.student_class) {
+                    fetchExaminations(resp.data.data.student_class._id);
+                    setClassDetails({
+                        id: resp.data.data.student_class._id,
+                        class: resp.data.data.student_class.class_text
+                    });
+                }
+            })
+            .catch(e => {
+                console.log("Error fetching student details:", e);
+            });
+    };
 
-useEffect(()=>{
-  getStudentDetails();
-   
-},[])
-    return(
+    useEffect(() => {
+        getStudentDetails();
+    }, []);
+
+    return (
         <>
-        
-        <Typography
-                  sx={{ textAlign: "center" }}
-                  variant="h3"
-                >
-                Your Examinations [ Class: {classDetails && classDetails.class} ]
-                </Typography>
-                <TableContainer component={"div"}>
-                  <Table sx={{ minWidth: 250 }} aria-label="simple table">
+            <Typography
+                sx={{ textAlign: "center", my: 3 }}
+                variant="h3"
+            >
+                Your Examinations [ Class: {classDetails ? classDetails.class : '...'} ]
+            </Typography>
+            <TableContainer component={"div"}>
+                <Table sx={{ minWidth: 250 }} aria-label="simple table">
                     <TableHead>
-                      <TableRow>
-                        <TableCell sx={{ fontWeight: "700" }} align="left">
-                          Exam Date
-                        </TableCell>
-                        <TableCell sx={{ fontWeight: "700" }} align="left">
-                          Subject
-                        </TableCell>
-                        <TableCell sx={{ fontWeight: "700" }} align="center">
-                          Exam Type
-                        </TableCell>
-                      </TableRow>
+                        <TableRow>
+                            <TableCell sx={{ fontWeight: "700" }}>Exam Date</TableCell>
+                            <TableCell sx={{ fontWeight: "700" }}>Subject</TableCell>
+                            <TableCell sx={{ fontWeight: "700" }} align="center">Exam Type</TableCell>
+                        </TableRow>
                     </TableHead>
                     <TableBody>
-                      {examinations &&
-                        examinations.map((examination, i) => {
-                          return (
+                        {examinations && examinations.map((examination, i) => (
                             <TableRow key={i}>
-                              <TableCell component="th" scope="row">
-                                {convertDate(examination.examDate)}
-                              </TableCell>
-                              <TableCell align="left">
-                                {examination.subject.subject_name}
-                              </TableCell>
-                              <TableCell align="center">
-                                {examination.examType}
-                              </TableCell>
+                                <TableCell>{convertDate(examination.examDate)}</TableCell>
+                                <TableCell>{examination.subject?.subject_name || 'N/A'}</TableCell>
+                                <TableCell align="center">{examination.examType}</TableCell>
                             </TableRow>
-                          );
-                        })}
+                        ))}
                     </TableBody>
-                  </Table>
-                </TableContainer>
-        
+                </Table>
+            </TableContainer>
         </>
-    )
+    );
 }

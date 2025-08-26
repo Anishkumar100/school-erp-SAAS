@@ -3,7 +3,7 @@ require("dotenv").config();
 const express = require("express");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
-const connectToDatabase = require("./db"); // <-- import reusable DB
+const connectToDatabase = require("./db");
 
 // ROUTERS
 const schoolRouter = require("./router/school.router");
@@ -24,16 +24,26 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+// ✅ FIX 1: Allow multiple origins for CORS (local development and production)
+const allowedOrigins = [
+  "https://spark-erp-one.vercel.app",
+  "http://localhost:5173" // Add your local frontend URL
+];
 
 app.use(cors({
-  origin: "https://spark-erp-one.vercel.app",
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
-  exposedHeaders: ["Authorization"], // ✅ important
+  exposedHeaders: ["Authorization"],
 }));
 
-// Connect to MongoDB once
-
-connectToDatabase(process.env.MONGO_URL || `mongodb+srv://akcoder1102004:ak@schoolmanagement.9ltii0g.mongodb.net/?retryWrites=true&w=majority&appName=schoolManagement`)
+// ✅ FIX 2: Use the correct environment variable name 'MONGO_URI'
+connectToDatabase(process.env.MONGO_URI)
   .then(() => console.log("MongoDB Connected Successfully"))
   .catch((e) => console.log("MongoDB Connection Error", e));
 
@@ -42,16 +52,16 @@ app.get("/", (req, res) => {
   res.send("Spark Solutions Built this APP");
 });
 
-app.use("/api/school", schoolRouter);
-app.use("/api/student", studentRouter);
-app.use("/api/teacher", teacherRouter);
-app.use("/api/class", classRouter);
-app.use("/api/subject", subjectRouter);
-app.use("/api/examination", examRouter);
-app.use("/api/attendance", attendanceRoutes);
-app.use("/api/period", periodRoutes);
-app.use("/api/notices", noticeRoutes);
-
+// Apply middleware to all necessary routes
+app.use("/api/school", schoolRouter); // School has public and private routes inside
+app.use("/api/student", authCheck, studentRouter);
+app.use("/api/teacher", authCheck, teacherRouter);
+app.use("/api/class", authCheck, classRouter);
+app.use("/api/subject", authCheck, subjectRouter);
+app.use("/api/examination", authCheck, examRouter);
+app.use("/api/attendance", authCheck, attendanceRoutes);
+app.use("/api/period", authCheck, periodRoutes);
+app.use("/api/notices", authCheck, noticeRoutes);
 app.get("/api/auth/check", authCheck);
 
 const PORT = process.env.PORT || 3000;

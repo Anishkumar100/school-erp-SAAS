@@ -1,23 +1,27 @@
-import { Box, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
-import axios from "axios";
+import { Box, Paper, Table, TableBody, TableCell, TableContainer, TableRow, Typography } from "@mui/material";
+// 1. Import apiClient instead of axios
+import apiClient from "../../../../apiClient"; // Adjust path if needed
 import { useEffect, useState } from "react";
-import { baseUrl } from "../../../environment";
-import "./StudentDetails.css"
-export default function StudentDetails(){
-    const [student, setStudent] = useState(null)
+import "./StudentDetails.css";
 
-    const getStudentDetails = ()=>{
-        axios.get(`${baseUrl}/student/fetch-own`).then(resp=>{
-            setStudent(resp.data.data)
-    console.log("student",  resp)
-        }).catch(e=>{
-            console.log("Error in student", e)
-        })
-    }
+export default function StudentDetails() {
+    const [student, setStudent] = useState(null);
 
-    useEffect(()=>{
-        getStudentDetails()
-    },[])
+    const getStudentDetails = () => {
+        // 2. Use apiClient for the authenticated request
+        apiClient.get(`/student/fetch-own`)
+            .then(resp => {
+                setStudent(resp.data.data);
+            })
+            .catch(e => {
+                console.log("Error fetching student details", e);
+            });
+    };
+
+    useEffect(() => {
+        getStudentDetails();
+    }, []);
+
     return(
         <>
                 <Typography variant="h3"  sx={{textAlign:'center',marginBottom:"15px" }}>Student Details</Typography>

@@ -1,109 +1,74 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Typography, Table, TableBody, TableCell, TableHead, TableRow, CircularProgress, Box } from '@mui/material';
+import { Container, Typography, Table, TableBody, TableCell, TableHead, TableRow, CircularProgress, Box, Paper } from '@mui/material';
 import { Pie } from 'react-chartjs-2';
-import {Chart, ArcElement} from 'chart.js'
-
-import axios from 'axios';
-import { baseUrl } from '../../../environment';
+import { Chart, ArcElement, Tooltip, Legend } from 'chart.js';
+// 1. Import apiClient instead of axios
+import apiClient from '../../../../apiClient'; // Adjust path if needed
 
 const AttendanceStudent = () => {
-  Chart.register(ArcElement);
+  Chart.register(ArcElement, Tooltip, Legend);
 
   const [attendanceData, setAttendanceData] = useState([]);
-  const [chartData,  setChartData] = useState([0,0]);
+  const [chartData, setChartData] = useState({ present: 0, absent: 0 });
   const [loading, setLoading] = useState(true);
-  const [studentId, setStudentId] = useState(null);
-  const [classDetails, setClassDetails] = useState(null);
 
- 
- const dateConvert = (date)=>{
-    const dateData  = new Date(date);
-    return dateData.getDate()+"-"+ (+dateData.getMonth()+1) + "-" + dateData.getFullYear();
- }
+  const dateConvert = (date) => {
+    const dateData = new Date(date);
+    return dateData.toLocaleDateString(); // Simpler and locale-aware
+  };
 
-
-  const chartDataFunc=(data)=>{
-     
-    data.forEach(data=>{
-       
-        if(data.status==='Present'){
-          setChartData(x=>[x[0]+1,x[1]])
-        }else if(data.status==='Absent'){
-            setChartData(x=>[x[0],x[1]+1])
-        }
-    
-    })
-  }
-
-  
-  // Fetch attendance data for the specific student
   useEffect(() => {
-    const fetchAttendanceData = async () => {
+    const fetchStudentAndAttendanceData = async () => {
       try {
-        const response = await axios.get(`${baseUrl}/attendance/${studentId}`);
-        console.log(response,"attendance data")
-        setAttendanceData(response.data);
-        chartDataFunc(response.data)
-        setLoading(false);
+        // 2. Use apiClient for all requests
+        const studentResponse = await apiClient.get(`/student/fetch-own`);
+        const studentId = studentResponse.data.data._id;
+
+        if (studentId) {
+          const attendanceResponse = await apiClient.get(`/attendance/${studentId}`);
+          const records = attendanceResponse.data || [];
+          setAttendanceData(records);
+
+          // 3. OPTIMIZED: Calculate chart data efficiently with reduce
+          const summary = records.reduce((acc, record) => {
+            if (record.status === 'Present') {
+              acc.present += 1;
+            } else if (record.status === 'Absent') {
+              acc.absent += 1;
+            }
+            return acc;
+          }, { present: 0, absent: 0 });
+          setChartData(summary);
+        }
       } catch (error) {
-        console.error("Error fetching attendance data:", error);
+        console.error("Error fetching data:", error);
+      } finally {
         setLoading(false);
       }
     };
-  
-    if(studentId){
-      fetchAttendanceData();
-    }
-   
-  }, [studentId]);
 
-  // Calculate attendance summary for the chart
-//   const attendanceSummary = attendanceData.reduce(
-//     (summary, record) => {
-//       if (record.status === 'Present') summary.present++;
-//       if (record.status === 'Absent') summary.absent++;
-//       return summary;
-//     },
-//     { present: 0, absent: 0 }
-//   );
+    fetchStudentAndAttendanceData();
+  }, []);
 
   // Data for the chart
-  const data = {
+  const pieChartData = {
+    labels: ['Present', 'Absent'],
     datasets: [
       {
-        data:chartData, // 1 for Present, 0 for Absent
-        backgroundColor: [
-            'rgb(54, 162, 235)',
-            'rgb(255, 205, 86)'
-          ],
-        hoverOffset:20
+        data: [chartData.present, chartData.absent],
+        backgroundColor: ['rgb(54, 162, 235)', 'rgb(255, 99, 132)'],
+        hoverOffset: 4,
       },
     ],
-    labels: ['Present', 'Absent'],
   };
 
-
-  const getStudentDetails = ()=>{
-    axios.get(`${baseUrl}/student/fetch-own`).then(resp=>{
-        // fetchExaminations(resp.data.data.student_class._id);
-        setStudentId(resp.data.data._id)
-        setClassDetails({id:resp.data.data.student_class._id, class:resp.data.data.student_class.class_text})
-console.log("student",  resp)
-    }).catch(e=>{
-        console.log("Error in student", e)
-    })
-}
-
-useEffect(()=>{
-getStudentDetails();
- 
-},[])
-
-
   if (loading) {
-    return <CircularProgress />;
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 5 }}>
+        <CircularProgress />
+      </Box>
+    );
   }
-
   return (
     <Container>
       <Typography variant="h4" gutterBottom>Your Attendance</Typography>

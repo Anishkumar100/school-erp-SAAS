@@ -1,6 +1,6 @@
 import axios from "axios"
 import { useContext, useEffect } from "react"
-import { baseUrl } from "../../../environment"
+import { baseUrl } from "../../../../environment"
 import { useDispatch } from "react-redux"
 import { logout } from "../../../state/loginSlice"
 import { useNavigate } from "react-router-dom"

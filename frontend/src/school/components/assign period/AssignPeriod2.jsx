@@ -1,8 +1,8 @@
 /* eslint-disable react/prop-types */
 import React, { useState, useEffect } from 'react';
 import { Container, Button, Select, MenuItem, InputLabel, FormControl, TextField, Typography } from '@mui/material';
-import axios from 'axios';
-import { baseUrl } from '../../../environment';
+// 1. Import apiClient instead of axios
+import apiClient from '../../../../apiClient'; // Adjust path if needed
 
 const periods = [
   { id: 1, label: 'Period 1 (10:00 AM - 11:00 AM)', startTime: '10:00', endTime: '11:00' },
@@ -13,28 +13,28 @@ const periods = [
   { id: 6, label: 'Period 5 (3:00 PM - 4:00 PM)', startTime: '15:00', endTime: '16:00' },
 ];
 
-const AssignPeriod2 = ({classId,isEdit, periodId, close}) => {
+const AssignPeriod2 = ({ classId, isEdit, periodId, close }) => {
   const [teachers, setTeachers] = useState([]);
-//   const [classes, setClasses] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [teacher, setTeacher] = useState('');
   const [subject, setSubject] = useState('');
-//   const [classId, setClassId] = useState('');
   const [selectedPeriod, setSelectedPeriod] = useState(null);
-  const [date, setDate] = useState(new Date());
-  
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]); // Default to today
   const [message, setMessage] = useState("");
-  const [type,  setType] = useState("success")
 
   useEffect(() => {
-    // Fetch teachers, classes, and subjects
+    // 2. Use apiClient for all requests
     const fetchData = async () => {
-      const teacherResponse = await axios.get(`${baseUrl}/teacher/fetch-with-query`, { params: {} });
-      const classResponse = await axios.get(`${baseUrl}/class/fetch-all`);
-      const subjectResponse = await axios.get(`${baseUrl}/subject/fetch-all`, { params: {} });
-      setSubjects(subjectResponse.data.data);
-      setTeachers(teacherResponse.data.data);
-    //   setClasses(classResponse.data.data);
+      try {
+        const [teacherResponse, subjectResponse] = await Promise.all([
+          apiClient.get(`/teacher/fetch-with-query`, { params: {} }),
+          apiClient.get(`/subject/fetch-all`, { params: {} })
+        ]);
+        setTeachers(teacherResponse.data.data);
+        setSubjects(subjectResponse.data.data);
+      } catch (error) {
+        console.error("Error fetching initial data:", error);
+      }
     };
     fetchData();
   }, []);
@@ -47,75 +47,69 @@ const AssignPeriod2 = ({classId,isEdit, periodId, close}) => {
     }
 
     try {
-      await axios.post(`${baseUrl}/period/create`, {
+      await apiClient.post(`/period/create`, {
         teacher,
         subject,
         classId,
-        startTime:date+" "+selectedPeriod.startTime,
-        endTime:date+" "+ selectedPeriod.endTime,
+        startTime: `${date}T${selectedPeriod.startTime}:00`,
+        endTime: `${date}T${selectedPeriod.endTime}:00`,
       });
       alert('Period assigned successfully');
-      setMessage("Perid assigned Successfully.");
-      close()
+      close();
     } catch (error) {
       console.error('Error assigning period:', error);
-      setMessage("Error in Assigning.")
+      alert(error.response?.data?.message || "Error in assigning period.");
     }
   };
 
   const handleUpdateEvent = async () => {
     try {
-      await axios.put(`${baseUrl}/period/update/${periodId}`, {
+      await apiClient.put(`/period/update/${periodId}`, {
         teacher,
         subject,
-        classId,
-        startTime:date+" "+selectedPeriod.startTime,
-        endTime:date+" "+ selectedPeriod.endTime,
       });
       alert('Period updated successfully');
-      setMessage('Period updated successfully');
-      close()
+      close();
     } catch (error) {
       console.error('Error updating period:', error);
-      setMessage("Period update Error.")
+      alert("Period update error.");
     }
   };
 
   const handleDeleteEvent = async () => {
-    try {
-      await axios.delete(`${baseUrl}/period/delete/${periodId}`);
-      alert('Period deleted successfully');
-      setMessage("Period deleted successfully.")
-      close()
-    } catch (error) {
-      console.error('Error deleting period:', error);
-      setMessage("Error in period delete.")
-    }
-  };
-
-  // Fetch the period details if editing
-  const fetchPeriodsWithId = async (periodId) => {
-    try {
-      const response = await axios.get(`${baseUrl}/period/${periodId}`);
-      const periodData = response.data.period;
-      const startTime  = new Date(periodData.startTime).getHours();
-    //   console.log(new Date(periodData.startTime),"periodic data")
-      setTeacher(periodData.teacher._id);
-      setSubject(periodData.subject._id);
-      setSelectedPeriod(periods.find(p => p.startTime === `${startTime}:00`)); // match by startTime
-      setDate(periodData.startTime.substring(0, 10)); // date part of startTime
-    } catch (error) {
-      console.error('Error fetching period details:', error);
+    if (window.confirm("Are you sure you want to delete this period?")) {
+        try {
+            await apiClient.delete(`/period/delete/${periodId}`);
+            alert('Period deleted successfully');
+            close();
+        } catch (error) {
+            console.error('Error deleting period:', error);
+            alert("Error in period deletion.");
+        }
     }
   };
 
   useEffect(() => {
+    const fetchPeriodsWithId = async (pId) => {
+      try {
+        const response = await apiClient.get(`/period/${pId}`);
+        const periodData = response.data.data; // Use .data from standardized response
+        const start = new Date(periodData.startTime);
+        const startTimeString = `${String(start.getHours()).padStart(2, '0')}:00`;
+        
+        setTeacher(periodData.teacher._id);
+        setSubject(periodData.subject._id);
+        setSelectedPeriod(periods.find(p => p.startTime === startTimeString));
+        setDate(periodData.startTime.substring(0, 10));
+      } catch (error) {
+        console.error('Error fetching period details:', error);
+      }
+    };
+
     if (isEdit && periodId) {
       fetchPeriodsWithId(periodId);
     }
-
-  }, [isEdit, periodId,message]);
-
+  }, [isEdit, periodId]);
 
 
   return (

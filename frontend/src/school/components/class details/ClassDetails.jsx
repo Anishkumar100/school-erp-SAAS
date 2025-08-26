@@ -21,7 +21,7 @@ import TableRow from "@mui/material/TableRow";
 import { useEffect, useState } from "react";
 import { useFormik } from "formik";
 // 1. Import apiClient instead of axios
-import apiClient from "../../../apiClient"; // Adjust the path if needed
+import apiClient from "../../../../apiClient"; // Adjust the path if needed
 import CustomizedSnackbars from "../../../basic utility components/CustomizedSnackbars";
 import { useNavigate } from "react-router-dom";
 import Examinations from "./sub components/examinations/Examinations";

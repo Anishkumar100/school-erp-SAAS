@@ -5,12 +5,12 @@ import {
   Typography,
   Modal,
   IconButton,
-  useMediaQuery,
   Fade,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-// 1. Import apiClient instead of axios
-import apiClient from "../../../../../apiClient"; // Adjust the path to your apiClient.js file
+// Use the default axios for public routes
+import axios from 'axios';
+import { baseUrl } from '../../../../../environment'; // Ensure this path is correct
 
 const Gallery = () => {
   const [open, setOpen] = useState(false);
@@ -24,20 +24,20 @@ const Gallery = () => {
 
   const handleClose = () => {
     setOpen(false);
-    setSelectedSchool(null);
   };
 
   useEffect(() => {
-    // 2. Use apiClient for the authenticated request
-    apiClient
-      .get(`/school/all`) // No need for baseUrl
+    // Fetch data from the new, public endpoint
+    axios
+      .get(`${baseUrl}/school/gallery`)
       .then((resp) => {
-        setSchools(resp.data.data);
+        setSchools(Array.isArray(resp.data.data) ? resp.data.data : []);
       })
       .catch((e) => {
-        console.log('ERROR fetching schools:', e);
+        console.log('ERROR fetching school gallery:', e);
+        setSchools([]);
       });
-  }, []);
+  }, []); // This runs once when the component mounts
 
   return (
     <>
@@ -53,18 +53,25 @@ const Gallery = () => {
                   borderRadius: 2,
                   boxShadow: 2,
                   height: { xs: 220, md: 250 },
-                  // ... other styles
+                  display: 'flex',
+                  flexDirection: 'column',
+                  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                  '&:hover': {
+                    transform: 'scale(1.03)',
+                    boxShadow: 6,
+                  },
                 }}
               >
                 <Box sx={{ flex: 1, overflow: 'hidden' }}>
                   <img
-                    src={school.school_image} // Use the full URL from the backend
+                    src={school.school_image}
                     alt={school.school_name}
                     loading="lazy"
                     style={{
                       width: '100%',
                       height: '100%',
                       objectFit: 'cover',
+                      display: 'block',
                     }}
                   />
                 </Box>
@@ -85,9 +92,51 @@ const Gallery = () => {
         ))}
       </Grid>
 
-      {/* Modal remains the same */}
-      <Modal open={open} onClose={handleClose}>
-        {/* ... modal content ... */}
+      <Modal open={open} onClose={handleClose} closeAfterTransition>
+        <Fade in={open} onExited={() => setSelectedSchool(null)}>
+          <Box
+            sx={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              bgcolor: 'background.paper',
+              boxShadow: 24,
+              borderRadius: 2,
+              maxWidth: '90%',
+              maxHeight: '90vh',
+              p: { xs: 2, md: 3 },
+            }}
+          >
+            <IconButton
+              onClick={handleClose}
+              sx={{
+                position: 'absolute', top: 8, right: 8,
+              }}
+            >
+              <CloseIcon />
+            </IconButton>
+            {selectedSchool && (
+              <>
+                <Typography variant="h5" sx={{ fontWeight: 600, mb: 2, textAlign: 'center' }}>
+                  {selectedSchool.school_name}
+                </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                  <img
+                    src={selectedSchool.school_image}
+                    alt={selectedSchool.school_name}
+                    style={{
+                      maxWidth: '100%',
+                      maxHeight: '70vh',
+                      borderRadius: 8,
+                      objectFit: 'cover',
+                    }}
+                  />
+                </Box>
+              </>
+            )}
+          </Box>
+        </Fade>
       </Modal>
     </>
   );

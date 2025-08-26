@@ -5,7 +5,7 @@ import { Bar } from "react-chartjs-2";
 import PreviewIcon from '@mui/icons-material/Preview';
 
 // 1. Import apiClient instead of axios
-import apiClient from "../../../apiClient"; // Adjust path if needed
+import apiClient from "../../../../apiClient"; // Adjust path if needed
 
 // ChartJS setup
 import {

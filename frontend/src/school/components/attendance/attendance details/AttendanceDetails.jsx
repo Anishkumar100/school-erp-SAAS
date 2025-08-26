@@ -1,87 +1,78 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Typography, Table, TableBody, TableCell, TableHead, TableRow, CircularProgress, Box } from '@mui/material';
-import { Doughnut, Pie } from 'react-chartjs-2';
-import {Chart, ArcElement} from 'chart.js'
-
-import axios from 'axios';
+import { Container, Typography, Table, TableBody, TableCell, TableHead, TableRow, CircularProgress, Box, Paper } from '@mui/material';
+import { Pie } from 'react-chartjs-2';
+import { Chart, ArcElement, Tooltip, Legend } from 'chart.js';
+// 1. Import apiClient instead of axios
+import apiClient from '../../../../../apiClient'; // Adjust path if needed
 import { useParams } from 'react-router-dom';
-import { baseUrl } from '../../../../environment';
 
 const AttendanceDetails = () => {
-    Chart.register(ArcElement);
+    Chart.register(ArcElement, Tooltip, Legend);
 
-  const [attendanceData, setAttendanceData] = useState([]);
-  const [chartData,  setChartData] = useState([0,0])
-  const [loading, setLoading] = useState(true);
+    const [attendanceData, setAttendanceData] = useState([]);
+    const [chartData, setChartData] = useState({ present: 0, absent: 0 });
+    const [loading, setLoading] = useState(true);
+    const { studentId } = useParams(); // Use useParams hook to get ID from URL
 
-  const studentId= useParams().studentId;
-
-const dateConvert = (date)=>{
-    const dateData  = new Date(date);
-    return dateData.getDate()+"-"+ (+dateData.getMonth()+1) + "-" + dateData.getFullYear();
-}
-
-
-  const chartDataFunc=(data)=>{
-     
-    data.forEach(data=>{
-       
-        if(data.status==='Present'){
-          setChartData(x=>[x[0]+1,x[1]])
-        }else if(data.status==='Absent'){
-            setChartData(x=>[x[0],x[1]+1])
-        }
-    
-    })
-  }
-  // Fetch attendance data for the specific student
-  useEffect(() => {
-    const fetchAttendanceData = async () => {
-      try {
-        const response = await axios.get(`${baseUrl}/attendance/${studentId}`);
-        console.log(response,"attendance data")
-        setAttendanceData(response.data);
-        chartDataFunc(response.data)
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching attendance data:", error);
-        setLoading(false);
-      }
+    const dateConvert = (date) => {
+        const dateData = new Date(date);
+        return dateData.toLocaleDateString(); // Simpler and locale-aware
     };
-  
 
-    fetchAttendanceData();
-  }, [studentId]);
+    // Fetch attendance data for the specific student
+    useEffect(() => {
+        if (!studentId) {
+            setLoading(false);
+            return;
+        }
 
-  // Calculate attendance summary for the chart
-//   const attendanceSummary = attendanceData.reduce(
-//     (summary, record) => {
-//       if (record.status === 'Present') summary.present++;
-//       if (record.status === 'Absent') summary.absent++;
-//       return summary;
-//     },
-//     { present: 0, absent: 0 }
-//   );
+        const fetchAttendanceData = async () => {
+            try {
+                // 2. Use apiClient for the authenticated request
+                const response = await apiClient.get(`/attendance/${studentId}`);
+                const records = response.data || [];
+                setAttendanceData(records);
 
-  // Data for the chart
-  const data = {
-    datasets: [
-      {
-        data:chartData, // 1 for Present, 0 for Absent
-        backgroundColor: [
-            'rgb(54, 162, 235)',
-            'rgb(255, 205, 86)'
-          ],
-        hoverOffset:20
-      },
-    ],
-    labels: ['Present', 'Absent'],
-  };
+                // 3. OPTIMIZED: Calculate chart data efficiently with reduce
+                const summary = records.reduce((acc, record) => {
+                    if (record.status === 'Present') {
+                        acc.present += 1;
+                    } else if (record.status === 'Absent') {
+                        acc.absent += 1;
+                    }
+                    return acc;
+                }, { present: 0, absent: 0 });
+                setChartData(summary);
 
+            } catch (error) {
+                console.error("Error fetching attendance data:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-  if (loading) {
-    return <CircularProgress />;
-  }
+        fetchAttendanceData();
+    }, [studentId]);
+
+    // Data for the chart
+    const pieChartData = {
+        labels: ['Present', 'Absent'],
+        datasets: [
+            {
+                data: [chartData.present, chartData.absent],
+                backgroundColor: ['rgb(54, 162, 235)', 'rgb(255, 99, 132)'],
+                hoverOffset: 4,
+            },
+        ],
+    };
+
+    if (loading) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 5 }}>
+                <CircularProgress />
+            </Box>
+        );
+    }
 
   return (
     <Container>

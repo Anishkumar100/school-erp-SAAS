@@ -7,8 +7,8 @@ import {
   Paper,
   Select,
   Typography,
+  InputLabel,
 } from "@mui/material";
-import Grid from "@mui/material/Grid2";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
@@ -16,26 +16,27 @@ import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import { useEffect, useState } from "react";
-import axios from "axios";
-import { baseUrl } from "../../../environment";
+// 1. Import apiClient instead of axios
+import apiClient from "../../../../apiClient"; // Adjust path if needed
 import { convertDate } from "../../../utilityFunctions";
 import NoData from "../../../basic utility components/NoData";
 
 export default function TeacherExaminations() {
   const [allClasses, setAllClasses] = useState([]);
-  const [selectedClass, setSelectedClass] = useState(null);
+  const [selectedClass, setSelectedClass] = useState("");
   const [examinations, setExaminations] = useState([]);
 
   const handleClassChange = (e) => {
     setSelectedClass(e.target.value);
   };
 
+  // 2. All functions now use apiClient
   const fetchExaminations = () => {
-    axios
-      .get(`${baseUrl}/examination/fetch-class/${selectedClass}`)
+    if (!selectedClass) return; // Don't fetch if no class is selected
+    apiClient
+      .get(`/examination/fetch-class/${selectedClass}`)
       .then((resp) => {
-        console.log("ALL Examination", resp);
-        setExaminations(resp.data.data);
+        setExaminations(resp.data.data || []);
       })
       .catch((e) => {
         console.log("Error in fetching Examinations.");
@@ -43,26 +44,25 @@ export default function TeacherExaminations() {
   };
 
   useEffect(() => {
-    if (selectedClass) {
-      fetchExaminations();
-    }
+    fetchExaminations();
   }, [selectedClass]);
 
-  const fetchStudentClass = () => {
-    axios
-      .get(`${baseUrl}/class/fetch-all`)
+  const fetchTeacherClasses = () => {
+    apiClient
+      .get(`/class/attendee`) // Fetches classes assigned to the logged-in teacher
       .then((resp) => {
-        setAllClasses(resp.data.data);
-        console.log("Class", resp.data);
-        setSelectedClass(resp.data.data[0]._id);
+        setAllClasses(resp.data);
+        if (resp.data.length > 0) {
+          setSelectedClass(resp.data[0].classId);
+        }
       })
       .catch((e) => {
-        console.log("Error in fetching student Class", e);
+        console.log("Error in fetching teacher's classes", e);
       });
   };
 
   useEffect(() => {
-    fetchStudentClass();
+    fetchTeacherClasses();
   }, []);
 
   return (

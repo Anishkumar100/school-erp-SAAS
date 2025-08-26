@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
-import { baseUrl } from "../../../environment";
 import {
   Box,
   FormControl,
@@ -16,133 +14,100 @@ import {
   TableRow,
   TextField,
   Typography,
+  CircularProgress,
 } from "@mui/material";
-import Grid from "@mui/material/Grid2"; // Import Grid2
+import Grid from "@mui/material/Grid2";
 import { styled } from '@mui/material/styles';
-
 import { Link } from "react-router-dom";
+// 1. Import apiClient
+import apiClient from "../../../../apiClient"; 
 import CustomizedSnackbars from "../../../basic utility components/CustomizedSnackbars";
 import Attendee from "./attendee/Attendee";
 
-
 const Item = styled(Paper)(({ theme }) => ({
-   
-    ...theme.typography.body2,
-    padding: theme.spacing(1),
-    textAlign: 'center',
-    color: theme.palette.text.secondary,
-    // ...theme.applyStyles('dark', {
-    //   backgroundColor: '#1A2027',
-    // }),
-  }));
-
+  ...theme.typography.body2,
+  padding: theme.spacing(1),
+  textAlign: 'center',
+  color: theme.palette.text.secondary,
+}));
 
 const StudentAttendanceList = () => {
   const [students, setStudents] = useState([]);
   const [attendanceData, setAttendanceData] = useState({});
   const [loading, setLoading] = useState(true);
-  const [studentClass, setStudentClass] = useState([]);
-  const [selectedClass, setSelectedClass] = useState(null);
+  const [studentClasses, setStudentClasses] = useState([]);
+  const [selectedClass, setSelectedClass] = useState("");
   const [params, setParams] = useState({});
   const [message, setMessage] = useState("");
   const [type, setType] = useState("success");
 
-  const handleMessage = (type, message) => {
-    setType(type);
-    setMessage(message);
-  };
+  const resetMessage = () => setMessage("");
+  
+  const handleMessage = (type, msg) => {
+      setType(type);
+      setMessage(msg);
+  }
 
-  const resetMessage = () => {
-    setMessage("");
-  };
-
-  const fetchStudentClass = () => {
-    axios
-      .get(`${baseUrl}/class/fetch-all`)
-      .then((resp) => {
-        setStudentClass(resp.data.data);
-      })
-      .catch((e) => {
-        console.log("Error in fetching student Class", e);
-      });
-  };
+  // 2. Use apiClient for all requests
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        const classResponse = await apiClient.get(`/class/fetch-all`);
+        setStudentClasses(classResponse.data.data);
+      } catch (error) {
+        console.error("Error fetching student classes", error);
+      }
+    };
+    fetchInitialData();
+  }, []);
 
   useEffect(() => {
-    const fetchStudents = async () => {
+    const fetchStudentsAndAttendance = async () => {
+      setLoading(true);
       try {
-        const response = await axios.get(
-          `${baseUrl}/student/fetch-with-query`,
-          { params: params }
-        );
-        const studentsList = response.data.data;
+        const studentResponse = await apiClient.get(`/student/fetch-with-query`, { params });
+        const studentsList = studentResponse.data.data;
         setStudents(studentsList);
-        fetchAttendanceForStudents(studentsList);
+
+        if (studentsList.length > 0) {
+            // Fetch attendance for all students in parallel for efficiency
+            const attendancePromises = studentsList.map(student =>
+                apiClient.get(`/attendance/${student._id}`)
+            );
+            const attendanceResults = await Promise.all(attendancePromises);
+
+            const updatedAttendanceData = {};
+            attendanceResults.forEach((response, index) => {
+                const studentId = studentsList[index]._id;
+                const records = response.data || [];
+                const total = records.length;
+                const present = records.filter(r => r.status === "Present").length;
+                updatedAttendanceData[studentId] = total > 0 ? (present / total) * 100 : 0;
+            });
+            setAttendanceData(updatedAttendanceData);
+        } else {
+            setAttendanceData({}); // Clear data if no students
+        }
       } catch (error) {
-        console.error("Error fetching students:", error);
+        console.error("Error fetching students or attendance:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchStudents();
-    fetchStudentClass();
+    fetchStudentsAndAttendance();
   }, [params, message]);
 
-  const fetchAttendanceForStudents = async (studentsList) => {
-    const attendancePromises = studentsList.map((student) =>
-      fetchAttendanceForStudent(student._id)
-    );
-    const results = await Promise.all(attendancePromises);
-    const updatedAttendanceData = {};
-    results.forEach(({ studentId, attendancePercentage }) => {
-      updatedAttendanceData[studentId] = attendancePercentage;
-    });
-    setAttendanceData(updatedAttendanceData);
-    setLoading(false);
-  };
-
-  const fetchAttendanceForStudent = async (studentId) => {
-    try {
-      const response = await axios.get(`${baseUrl}/attendance/${studentId}`);
-      const attendanceRecords = response.data;
-      const totalClasses = attendanceRecords.length;
-      const presentCount = attendanceRecords.filter(
-        (record) => record.status === "Present"
-      ).length;
-      const attendancePercentage =
-        totalClasses > 0 ? (presentCount / totalClasses) * 100 : 0;
-
-      return { studentId, attendancePercentage };
-    } catch (error) {
-      console.error(`Error fetching attendance for student ${studentId}:`, error);
-      return { studentId, attendancePercentage: 0 };
-    }
-  };
-
   const handleClass = (e) => {
-    let newParam;
-    if (e.target.value !== "") {
-      setSelectedClass(e.target.value);
-      newParam = { ...params, student_class: e.target.value };
-    } else {
-      newParam = { ...params };
-      delete newParam["student_class"];
-    }
-    setParams(newParam);
+    const classId = e.target.value;
+    setSelectedClass(classId);
+    setParams(prev => ({ ...prev, student_class: classId || undefined }));
   };
 
   const handleSearch = (e) => {
-    let newParam;
-    if (e.target.value !== "") {
-      newParam = { ...params, search: e.target.value };
-    } else {
-      newParam = { ...params };
-      delete newParam["search"];
-    }
-    setParams(newParam);
+    const searchTerm = e.target.value;
+    setParams(prev => ({ ...prev, search: searchTerm || undefined }));
   };
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
 
   return (
   <>
@@ -189,7 +154,7 @@ const StudentAttendanceList = () => {
                   label="Student Class"
                 >
                   <MenuItem value="">Select Class</MenuItem>
-                  {studentClass.map((value, i) => (
+                  {studentClasses.map((value, i) => (
                     <MenuItem key={i} value={value._id}>
                       {value.class_text}
                     </MenuItem>

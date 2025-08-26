@@ -1,218 +1,163 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import {
-  Box,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-  Button,
-  CardMedia,
-  Paper,
-  TextField,
-  Typography,
+    Box,
+    Button,
+    CardMedia,
+    FormControl,
+    InputLabel,
+    MenuItem,
+    Paper,
+    Select,
+    TextField,
+    Typography,
 } from "@mui/material";
-import dayjs from "dayjs";
 import { useFormik } from "formik";
-import { useEffect, useState } from "react";
-import axios from "axios";
-import { baseUrl } from "../../../environment";
+import { useEffect, useRef, useState } from "react";
+// 1. Import apiClient instead of axios
+import apiClient from "../../../../apiClient"; // Adjust path if needed
 import CustomizedSnackbars from "../../../basic utility components/CustomizedSnackbars";
 import { studentSchema } from "../../../yupSchema/studentSchema";
 import StudentCardAdmin from "../../utility components/student card/StudentCard";
 
 export default function Students() {
-  const [studentClass, setStudentClass] = useState([]);
-  const [students, setStudents] = useState([]);
-  const [isEdit, setEdit] = useState(false);
-  const [editId, setEditId] = useState(null);
+    const [studentClasses, setStudentClasses] = useState([]);
+    const [students, setStudents] = useState([]);
+    const [isEdit, setEdit] = useState(false);
+    const [editId, setEditId] = useState(null);
+    const [file, setFile] = useState(null);
+    const [imageUrl, setImageUrl] = useState(null);
+    const [params, setParams] = useState({});
+    const [message, setMessage] = useState("");
+    const [type, setType] = useState("success");
+    const fileInputRef = useRef(null);
 
-  const [date, setDate] = useState(null);
-  const [file, setFile] = useState(null);
-  const [imageUrl, setImageUrl] = useState(null);
+    const resetMessage = () => setMessage("");
 
-  const addImage = (event) => {
-    const file = event.target.files[0];
-    setImageUrl(URL.createObjectURL(file));
-    console.log("Image", file, event.target.value);
-    setFile(file);
-  };
-
-  const [params, setParams] = useState({});
-  const handleClass = (e) => {
-    let newParam;
-    if (e.target.value !== "") {
-      newParam = { ...params, student_class: e.target.value };
-    } else {
-      newParam = { ...params };
-      delete newParam["student_class"];
-    }
-
-    setParams(newParam);
-  };
-
-  const handleSearch = (e) => {
-    let newParam;
-    if (e.target.value !== "") {
-      newParam = { ...params, search: e.target.value };
-    } else {
-      newParam = { ...params };
-      delete newParam["search"];
-    }
-
-    setParams(newParam);
-  };
-
-  const handleDelete = (id) => {
-    if (confirm("Are you sure you want to delete?")) {
-      axios
-        .delete(`${baseUrl}/student/delete/${id}`)
-        .then((resp) => {
-          setMessage(resp.data.message);
-          setType("success");
-        })
-        .catch((e) => {
-          setMessage(e.response.data.message);
-          setType("error");
-          console.log("Error, deleting", e);
-        });
-    }
-  };
-  const handleEdit = (id) => {
-    console.log("Handle  Edit is called", id);
-    setEdit(true);
-    axios
-      .get(`${baseUrl}/student/fetch-single/${id}`)
-      .then((resp) => {
-        Formik.setFieldValue("email", resp.data.data.email);
-        Formik.setFieldValue("name", resp.data.data.name);
-        Formik.setFieldValue("student_class", resp.data.data.student_class._id)
-        Formik.setFieldValue("gender", resp.data.data.gender)
-        Formik.setFieldValue("age", resp.data.data.age)
-        Formik.setFieldValue("guardian", resp.data.data.guardian)
-        Formik.setFieldValue("guardian_phone", resp.data.data.guardian_phone)
-        Formik.setFieldValue("password", resp.data.data.password)
-        setEditId(resp.data.data._id);
-      })
-      .catch((e) => {
-        console.log("Error  in fetching edit data.");
-      });
-  };
-
-  const cancelEdit = () => {
-    setEdit(false);
-    Formik.resetForm();
-    if (!isEdit) {
-      setFile(null);
-      setImageUrl(null);
-    }
-  };
-  
-
-  //   MESSAGE
-  const [message, setMessage] = useState("");
-  const [type, setType] = useState("succeess");
-
-  const resetMessage = () => {
-    setMessage("");
-  };
-
-  const initialValues = {
-    name: "",
-    email: "",
-    student_class: "",
-    gender:"",
-    age:"",
-    guardian: "",
-    guardian_phone: "",
-    student_image: "",
-    password: "",
-  };
-  const Formik = useFormik({
-    initialValues: initialValues,
-    validationSchema: studentSchema,
-    onSubmit: (values) => {
-      console.log("Form values", values);
-      if (isEdit) {
-        // Edit functionality
-        axios.patch(`${baseUrl}/student/update/${editId}`, {
-            ...values,
-          })
-          .then((resp) => {
-            setMessage(resp.data.message);
-            setType("success");
-            cancelEdit();
-          })
-          .catch((e) => {
-            setMessage(e.response.data.message);
-            setType("error");
-            console.log("Error, edit casting submit", e);
-          });
-      } else {
-        if (file) {
-          const fd = new FormData();
-          fd.append("image", file, file.name);
-          fd.append("email", values.email);
-          fd.append("name", values.name);
-          fd.append("student_class", values.student_class);
-          fd.append("age", values.age);
-          fd.append("gender", values.gender);
-          fd.append("guardian", values.guardian);
-          fd.append("guardian_phone", values.guardian_phone);
-          fd.append("password", values.password);
-          axios
-            .post(`${baseUrl}/student/register`, fd)
-            .then((resp) => {
-              setMessage(resp.data.message);
-              setType("success");
-              Formik.resetForm();
-              if (!isEdit) {
-                setFile(null);
-                setImageUrl(null);
-              }
-            })
-            .catch((e) => {
-              setMessage(e.response.data.message);
-              setType("error");
-              console.log("Error, response admin casting calls", e);
-            });
-        } else {
-          setMessage("Please provide an image.");
-          setType("error");
+    const addImage = (event) => {
+        const selectedFile = event.target.files[0];
+        if (selectedFile) {
+            setFile(selectedFile);
+            setImageUrl(URL.createObjectURL(selectedFile));
         }
-      }
-    },
-    
-  });
+    };
 
-  
+    const handleClass = (e) => {
+        const classId = e.target.value;
+        setParams(prev => ({ ...prev, student_class: classId || undefined }));
+    };
 
-  const fetchStudentClass = () => {
-    axios
-    .get(`${baseUrl}/class/fetch-all`)
-    .then((resp) => {
-      setStudentClass(resp.data.data)
-    console.log("Class",resp.data)
-    })
-    .catch((e) => {
-      console.log("Error in fetching student Class", e);
+    const handleSearch = (e) => {
+        const searchTerm = e.target.value;
+        setParams(prev => ({ ...prev, search: searchTerm || undefined }));
+    };
+
+    // 2. All functions now use apiClient
+    const handleDelete = (id) => {
+        if (window.confirm("Are you sure you want to delete this student?")) {
+            apiClient
+                .delete(`/student/delete/${id}`)
+                .then((resp) => {
+                    setMessage(resp.data.message);
+                    setType("success");
+                })
+                .catch((e) => {
+                    setMessage(e.response?.data?.message || "Failed to delete student.");
+                    setType("error");
+                });
+        }
+    };
+
+    const handleEdit = (id) => {
+        setEdit(true);
+        apiClient
+            .get(`/student/fetch-single/${id}`)
+            .then((resp) => {
+                const { data } = resp.data;
+                Formik.setValues({
+                    email: data.email,
+                    name: data.name,
+                    student_class: data.student_class._id,
+                    gender: data.gender,
+                    age: data.age,
+                    guardian: data.guardian,
+                    guardian_phone: data.guardian_phone,
+                    password: "", // Password should not be pre-filled
+                });
+                setImageUrl(data.student_image);
+                setEditId(data._id);
+            })
+            .catch(() => console.log("Error fetching student data for edit."));
+    };
+
+    const cancelEdit = () => {
+        setEdit(false);
+        setEditId(null);
+        Formik.resetForm();
+        handleClearFile();
+    };
+
+    const handleClearFile = () => {
+        if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+        }
+        setFile(null);
+        setImageUrl(null);
+    };
+
+    const initialValues = {
+        name: "", email: "", student_class: "", gender: "", age: "",
+        guardian: "", guardian_phone: "", password: "",
+    };
+
+    const Formik = useFormik({
+        initialValues,
+        validationSchema: studentSchema,
+        onSubmit: (values) => {
+            const fd = new FormData();
+            Object.keys(values).forEach((key) => {
+                // Don't append empty password on edit
+                if (key === 'password' && isEdit && !values.password) return;
+                fd.append(key, values[key]);
+            });
+            if (file) {
+                fd.append("image", file);
+            }
+
+            const apiCall = isEdit
+                ? apiClient.patch(`/student/update/${editId}`, fd)
+                : apiClient.post(`/student/register`, fd);
+
+            apiCall
+                .then((resp) => {
+                    setMessage(resp.data.message);
+                    setType("success");
+                    cancelEdit();
+                })
+                .catch((e) => {
+                    setMessage(e.response?.data?.message || "Operation failed.");
+                    setType("error");
+                });
+        },
     });
-  };
 
-  const fetchStudents = () => {
-    axios
-      .get(`${baseUrl}/student/fetch-with-query`, { params: params })
-      .then((resp) => {
-        console.log("Fetching data in  Casting Calls  admin.", resp);
-        setStudents(resp.data.data);
-      })
-      .catch((e) => {
-        console.log("Error in fetching casting calls admin data", e);
-      });
-  };
-  useEffect(() => {
-    fetchStudents();
-    fetchStudentClass();
-  }, [message, params]);
+    useEffect(() => {
+        const fetchClasses = () => {
+            apiClient.get(`/class/fetch-all`)
+                .then((resp) => setStudentClasses(resp.data.data))
+                .catch(() => console.log("Error fetching student classes."));
+        };
+        fetchClasses();
+    }, []);
+
+    useEffect(() => {
+        const fetchStudents = () => {
+            apiClient.get(`/student/fetch-with-query`, { params })
+                .then((resp) => setStudents(resp.data.data))
+                .catch(() => console.log("Error fetching students."));
+        };
+        fetchStudents();
+    }, [message, params]);
+
   return (
     <>
       {message && (

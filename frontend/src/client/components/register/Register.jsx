@@ -3,7 +3,7 @@ import { useFormik } from "formik";
 import { registerSchema } from "../../../yupSchema/registerSchema";
 import { useState } from "react";
 import axios from "axios";
-import { baseUrl } from "../../../environment";
+import { baseUrl } from "../../../../environment";
 import CustomizedSnackbars from "../../../basic utility components/CustomizedSnackbars";
 import { useNavigate } from "react-router-dom";
 import './Register.css';

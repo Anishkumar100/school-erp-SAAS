@@ -2,102 +2,115 @@ import { useEffect, useState } from "react";
 import { Box, Button, MenuItem, Paper, Select, TextField, Typography, IconButton } from "@mui/material";
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import axios from "axios";
-import { baseUrl } from "../../../environment";
+// 1. Import apiClient instead of axios
+import apiClient from "../../../../apiClient"; // Adjust path if needed
+import CustomizedSnackbars from "../../../basic utility components/CustomizedSnackbars";
 
 const NoticeSchool = () => {
   const [formData, setFormData] = useState({ title: "", message: "", audience: "" });
   const [notices, setNotices] = useState([]);
   const [audience, setAudience] = useState("all");
-  const [isEditing, setIsEditing] = useState(false); // Track if we are in edit mode
-  const [editNoticeId, setEditNoticeId] = useState(null); // Store the ID of the notice being edited
+  const [isEditing, setIsEditing] = useState(false);
+  const [editNoticeId, setEditNoticeId] = useState(null);
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  // State for snackbar messages
+  const [message, setMessage] = useState("");
+  const [type, setType] = useState("success");
+  const resetMessage = () => setMessage("");
 
   // Fetch Notices based on Audience
   const fetchNotices = async () => {
     try {
-      const response = await axios.get(`${baseUrl}/notices/fetch/${audience}`);
-      setNotices(response.data);
+      // 2. Use apiClient for all requests
+      const response = await apiClient.get(`/notices/fetch/${audience}`);
+      setNotices(response.data.data || []); // Ensure notices is always an array
     } catch (error) {
       console.error("Error fetching notices", error);
+      setMessage("Failed to fetch notices.");
+      setType("error");
     }
   };
 
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+  };
+
+
   useEffect(() => {
     fetchNotices();
-  }, [audience]);
+  }, [audience, message]); // Re-fetch when audience changes or after a CRUD operation
 
   // Add or Edit Notice
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const apiCall = isEditing
+      ? apiClient.put(`/notices/${editNoticeId}`, formData)
+      : apiClient.post(`/notices/add`, formData);
 
-    if (isEditing) {
-      // Update notice
-      try {
-        await axios.put(`${baseUrl}/notices/${editNoticeId}`, formData);
-        alert("Notice updated successfully!");
-        setIsEditing(false); // Reset to add mode
-        setEditNoticeId(null); // Clear edit ID
-      } catch (error) {
-        alert("Failed to update notice.");
-      }
-    } else {
-      // Add new notice
-      try {
-        await axios.post(`${baseUrl}/notices/add`, formData);
-        alert("Notice added successfully!");
-      } catch (error) {
-        alert("Failed to add notice.");
-      }
+    try {
+      const response = await apiCall;
+      setMessage(response.data.message || (isEditing ? "Notice updated successfully!" : "Notice added successfully!"));
+      setType("success");
+
+      // Reset form state
+      setIsEditing(false);
+      setEditNoticeId(null);
+      setFormData({ title: "", message: "", audience: "" });
+    } catch (error) {
+      setMessage(error.response?.data?.message || (isEditing ? "Failed to update notice." : "Failed to add notice."));
+      setType("error");
     }
-
-    setFormData({ title: "", message: "", audience: "" }); // Clear form
-    fetchNotices(); // Refresh notices list
   };
 
   // Set form data for editing
   const handleEdit = (notice) => {
-    setFormData({ title: notice.title, message: notice.message, audience: notice.audience });
+    setFormData({ title: notice.title, message: notice.message, audience: Array.isArray(notice.audience) ? 'all' : notice.audience });
     setIsEditing(true);
     setEditNoticeId(notice._id);
   };
 
   // Delete Notice
   const handleDelete = async (id) => {
-    if (confirm("Are you sure you want to delete?")) {
+    if (window.confirm("Are you sure you want to delete this notice?")) {
       try {
-        await axios.delete(`${baseUrl}/notices/${id}`);
-        alert("Notice deleted successfully!");
-        fetchNotices();
+        const response = await apiClient.delete(`/notices/${id}`);
+        setMessage(response.data.message || "Notice deleted successfully!");
+        setType("success");
       } catch (error) {
-        alert("Failed to delete notice.");
+        setMessage(error.response?.data?.message || "Failed to delete notice.");
+        setType("error");
       }
     }
-
   };
 
   return (
     <>
       <Box
         sx={{
-          maxWidth: { xs: "100%", sm: "900px" }, // full width on small screens
+          maxWidth: "900px",
           margin: "0 auto",
-          p: { xs: 2, sm: 3 },
+          p: 3,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
         }}
       >
+        {/* Title */}
+        <Typography variant="h2" sx={{ textAlign: "center", mb: 3 }}>
+          Notice
+        </Typography>
+
         {/* Form Section */}
         <Box
           component="form"
           onSubmit={handleSubmit}
           sx={{
             width: "100%",
-            p: { xs: 2, sm: 3 },
+            p: 3,
             border: "1px solid #ddd",
             borderRadius: 2,
             boxShadow: "0px 4px 10px rgba(0,0,0,0.1)",
@@ -126,7 +139,7 @@ const NoticeSchool = () => {
             onChange={handleChange}
             fullWidth
             multiline
-            rows={{ xs: 3, sm: 4 }}
+            rows={4}
             required
           />
 
@@ -143,17 +156,9 @@ const NoticeSchool = () => {
             </MenuItem>
             <MenuItem value="student">Student</MenuItem>
             <MenuItem value="teacher">Teacher</MenuItem>
-            <MenuItem value="all">Both</MenuItem>
           </Select>
 
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: { xs: "column", sm: "row" },
-              justifyContent: "center",
-              gap: 2,
-            }}
-          >
+          <Box sx={{ display: "flex", justifyContent: "center", gap: 2 }}>
             <Button type="submit" variant="contained" color="primary">
               {isEditing ? "Save Changes" : "Add Notice"}
             </Button>
@@ -174,31 +179,16 @@ const NoticeSchool = () => {
           </Box>
         </Box>
 
-        {/* Notices Section */}
-        <Box
-          sx={{
-            mt: 4,
-            textAlign: "center",
-            width: "100%",
-          }}
-        >
-          <Typography variant="h3" sx={{ mb: 2, fontSize: { xs: "1.2rem", sm: "1.8rem" } }}>
+        {/* Audience Filter Section */}
+        <Box sx={{ mt: 4, textAlign: "center", width: "100%" }}>
+          <Typography variant="h3" sx={{ mb: 2 }}>
             Notice For{" "}
             <span style={{ textTransform: "capitalize", color: "darkgreen" }}>
               {audience}
             </span>
           </Typography>
 
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: { xs: "column", sm: "row" },
-              justifyContent: "center",
-              gap: 2,
-              mb: 2,
-              flexWrap: "wrap",
-            }}
-          >
+          <Box sx={{ display: "flex", justifyContent: "center", gap: 2, mb: 2 }}>
             <Button variant="outlined" onClick={() => setAudience("student")}>
               Student Notices
             </Button>
@@ -206,22 +196,21 @@ const NoticeSchool = () => {
               Teacher Notices
             </Button>
             <Button variant="outlined" onClick={() => setAudience("all")}>
-              Both / All Notices
+              All Notices
             </Button>
           </Box>
         </Box>
 
+        {/* Scrollable Notices */}
         <Box
           sx={{
             mt: 2,
             display: "flex",
-            flexDirection: { xs: "column", sm: "row" },
-            overflowX: { xs: "scroll", sm: "auto" },
+            overflowX: "auto",
             gap: 2,
             p: 1,
             width: "100%",
             scrollBehavior: "smooth",
-            flexWrap: "wrap",
           }}
         >
           {notices.map((notice) => (
@@ -229,39 +218,35 @@ const NoticeSchool = () => {
               key={notice._id}
               sx={{
                 p: 2,
-                minWidth: { xs: "100%", sm: "300px" },
+                minWidth: "300px",
                 flex: "0 0 auto",
                 boxShadow: "0px 2px 6px rgba(0,0,0,0.1)",
               }}
             >
-              <Typography variant="h5" sx={{ fontSize: { xs: "1rem", sm: "1.25rem" } }}>
-                {notice.title}
-              </Typography>
-              <Typography variant="body1" sx={{ fontSize: { xs: "0.85rem", sm: "1rem" } }}>
-                {notice.message}
-              </Typography>
-              <Typography
-                variant="body2"
-                sx={{ mt: 1, display: "block", fontSize: { xs: "0.75rem", sm: "0.9rem" } }}
-              >
-                Audience: {notice.audience === "all" ? "Student & Teacher" : notice.audience} <br />
+              <Typography variant="h5">{notice.title}</Typography>
+              <Typography variant="body1">{notice.message}</Typography>
+              <Typography variant="body2" sx={{ mt: 1, display: "block" }}>
+                Audience: {notice.audience} <br />
                 Posted On: {new Date(notice.date).toLocaleDateString()}
               </Typography>
 
-              <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1, mt: 1 }}>
+              <Box>
                 <IconButton onClick={() => handleEdit(notice)} color="primary">
-                  <EditIcon fontSize="small" />
+                  <EditIcon />
                 </IconButton>
-                <IconButton onClick={() => handleDelete(notice._id)} color="secondary">
-                  <DeleteIcon fontSize="small" />
+                <IconButton
+                  onClick={() => handleDelete(notice._id)}
+                  color="secondary"
+                >
+                  <DeleteIcon />
                 </IconButton>
               </Box>
             </Paper>
           ))}
         </Box>
       </Box>
-
     </>
+
   );
 
 };

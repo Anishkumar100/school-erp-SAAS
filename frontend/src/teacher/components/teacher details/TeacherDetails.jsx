@@ -1,23 +1,36 @@
-import { Box, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
-import axios from "axios";
+import { Box, Paper, Table, TableBody, TableCell, TableContainer, TableRow, Typography, CircularProgress } from "@mui/material";
+// 1. Import apiClient instead of axios
+import apiClient from "../../../../apiClient"; // Adjust path if needed
 import { useEffect, useState } from "react";
-import { baseUrl } from "../../../environment";
-// import "./teacherDetails.css"
-export default function TeacherDetails(){
-    const [teacher, setTeacher] = useState(null)
 
-    const getTeacherDetails = ()=>{
-        axios.get(`${baseUrl}/teacher/fetch-own`).then(resp=>{
-            setTeacher(resp.data.data)
-    console.log("Single Teacher Details from Teacher Details page",  resp)
-        }).catch(e=>{
-            console.log("Error in teacher", e);
-        })
+export default function TeacherDetails() {
+    const [teacher, setTeacher] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        // 2. Use apiClient for the authenticated request
+        const getTeacherDetails = () => {
+            apiClient.get(`/teacher/fetch-own`)
+                .then(resp => {
+                    setTeacher(resp.data.data);
+                })
+                .catch(e => {
+                    console.log("Error fetching teacher details", e);
+                })
+                .finally(() => {
+                    setLoading(false);
+                });
+        };
+        getTeacherDetails();
+    }, []);
+
+    if (loading) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 5 }}>
+                <CircularProgress />
+            </Box>
+        );
     }
-
-    useEffect(()=>{
-        getTeacherDetails()
-    },[])
     return (
       <>
         <Typography

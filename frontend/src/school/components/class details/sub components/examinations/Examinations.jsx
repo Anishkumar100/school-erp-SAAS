@@ -2,126 +2,105 @@
 import {
     Box,
     Button,
-    CardMedia,
     FormControl,
     InputLabel,
     MenuItem,
     Paper,
     Select,
-    styled,
     TextField,
     Typography,
-  } from "@mui/material";
-  import Grid from "@mui/material/Grid2";
-  
-  import Table from "@mui/material/Table";
-  import TableBody from "@mui/material/TableBody";
-  import TableCell from "@mui/material/TableCell";
-  import TableContainer from "@mui/material/TableContainer";
-  import TableHead from "@mui/material/TableHead";
-  import TableRow from "@mui/material/TableRow";
-  
-  
-  import { useEffect, useState } from "react";
-  import { useFormik } from "formik";
-  import axios from "axios";
-  import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
-  import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
-  import dayjs from "dayjs";
-  import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { baseUrl } from "../../../../../environment";
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+} from "@mui/material";
+import { useEffect, useState } from "react";
+import { useFormik } from "formik";
+// 1. Import apiClient instead of axios
+import apiClient from "../../../../../../apiClient"; // Adjust path if needed
+import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
+import { DemoContainer } from "@mui/x-date-pickers/internals/demo";
+import dayjs from "dayjs";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { examSchema } from "../../../../../yupSchema/examinationSchema";
 import { convertDate } from "../../../../../utilityFunctions";
-  
- 
 
-export default function Examinations({allSubjects, handleMessage, examinations}){  
+export default function Examinations({ allSubjects, handleMessage, examinations }) {
     const [isEditExam, setEditExam] = useState(false);
-  const [examForm, setExamForm] = useState(false);
-  const [examEditId, setExamEditId] = useState(null)
-  const handleNewExam = () => {
-    setExamForm(true)
-  };
+    const [examForm, setExamForm] = useState(false);
+    const [examEditId, setExamEditId] = useState(null);
 
-  const handleEditExam = (id) => {
-    setExamEditId(id)
-    setEditExam(true)
-    setExamForm(true);
-    axios
-      .get(`${baseUrl}/examination/single/${id}`)
-      .then((resp) => {
-        console.log("Edit", resp)
-        examFormik.setFieldValue("exam_date", dayjs(resp.data.data.examDate));
-        examFormik.setFieldValue("subject", resp.data.data.subject);
-        examFormik.setFieldValue("exam_type", resp.data.data.examType);
-      })
-      .catch((e) => {
-        handleMessage("error", e.response.data.message)
-      });
+    const handleNewExam = () => {
+        setEditExam(false); // Ensure we are not in edit mode
+        setExamEditId(null);
+        examFormik.resetForm();
+        setExamForm(true);
+    };
 
-  };
+    // 2. All functions now use apiClient
+    const handleEditExam = (id) => {
+        setExamEditId(id);
+        setEditExam(true);
+        setExamForm(true);
+        apiClient
+            .get(`/examination/single/${id}`)
+            .then((resp) => {
+                const { data } = resp.data;
+                examFormik.setFieldValue("exam_date", dayjs(data.examDate));
+                examFormik.setFieldValue("subject", data.subject);
+                examFormik.setFieldValue("exam_type", data.examType);
+            })
+            .catch((e) => {
+                handleMessage("error", e.response?.data?.message || "Failed to fetch exam details.");
+            });
+    };
 
-  const handleDeleteExam = (id) => {
-    if (confirm("Are you sure you want to delete?")) {
-      axios
-        .delete(`${baseUrl}/examination/delete/${id}`)
-        .then((resp) => {
-        handleMessage("success", resp.data.message);
-        })
-        .catch((e) => {
-        handleMessage("error", e.response.data.message )
-        });
-    }
-  };
- 
+    const handleDeleteExam = (id) => {
+        if (window.confirm("Are you sure you want to delete this examination?")) {
+            apiClient
+                .delete(`/examination/delete/${id}`)
+                .then((resp) => {
+                    handleMessage("success", resp.data.message);
+                })
+                .catch((e) => {
+                    handleMessage("error", e.response?.data?.message || "Failed to delete examination.");
+                });
+        }
+    };
 
-  const cancelEditExam = () => {
-    setExamForm(false);
-    examFormik.resetForm();
-  };
+    const cancelEditExam = () => {
+        setExamForm(false);
+        setEditExam(false);
+        setExamEditId(null);
+        examFormik.resetForm();
+    };
 
+    const examFormik = useFormik({
+        initialValues: { exam_date: "", subject: "", exam_type: "" },
+        validationSchema: examSchema,
+        onSubmit: (values) => {
+            const apiCall = isEditExam
+                ? apiClient.patch(`/examination/update/${examEditId}`, values)
+                : apiClient.post(`/examination/new`, { ...values, class_id: getClassId() });
 
+            apiCall
+                .then(resp => {
+                    handleMessage("success", resp.data.message);
+                    cancelEditExam();
+                })
+                .catch(e => {
+                    handleMessage("error", e.response?.data?.message || "Operation failed.");
+                });
+        },
+    });
 
-  const examFormik = useFormik({
-    initialValues: { exam_date: "", subject: "", exam_type: "" },
-    validationSchema: examSchema,
-
-    onSubmit: (values) => {
-      if(isEditExam){
-       axios.patch(`${baseUrl}/examination/update/${examEditId}`,{...values}).then(resp=>{
-        handleMessage("success",resp.data.message);
-  
-       }).catch(e=>{
-        handleMessage("error",e.response.data.message);
-       })
-      }else{
-        axios
-        .post(`${baseUrl}/examination/new`, {
-          ...values,
-          class_id: getClassId(),
-        })
-        .then((resp) => {
-          handleMessage("success", resp.data.message)
-        })
-        .catch((e) => {
-         handleMessage("error", e.response.data.message);
-        });
-      }
-    examFormik.resetForm();
-    },
-  });
-
-  const getClassId = () => {
-    const queryString = window.location.search;
-    const urlParams = new URLSearchParams(queryString);
-    const paramIdValue = urlParams.get("class-id");
-    return paramIdValue;
-  };
-
-
-  
-
-
+    const getClassId = () => {
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+        return urlParams.get("class-id");
+    };
 
 
     return(

@@ -2,85 +2,85 @@
 import {
     Box,
     Button,
-    CardMedia,
     FormControl,
     InputLabel,
     MenuItem,
     Paper,
     Select,
-    styled,
-    TextField,
     Typography,
-  } from "@mui/material";
-  import Grid from "@mui/material/Grid2";
-  
-  import Table from "@mui/material/Table";
-  import TableBody from "@mui/material/TableBody";
-  import TableCell from "@mui/material/TableCell";
-  import TableContainer from "@mui/material/TableContainer";
-  import TableHead from "@mui/material/TableHead";
-  import TableRow from "@mui/material/TableRow";
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableRow,
+} from "@mui/material";
 import { useFormik } from "formik";
 import { useEffect, useState } from "react";
-import { userEditSchema } from "../../../../../yupSchema/userEditSchema";
-import axios from "axios";
-import { baseUrl } from "../../../../../environment";
+// 1. Import apiClient instead of axios
+import apiClient from "../../../../../../apiClient"; // Adjust path if needed
 
+export default function Attendee({ classId, handleMessage }) {
+    const [isEditAttendee, setEditAttendee] = useState(false);
+    const [attendee, setAttendee] = useState(null);
+    const [allTeachers, setAllTeachers] = useState([]);
 
-export default function Attendence({attendeeId, classId,allTeachers, handleMessage}){
-    const [isEditPercent, setEditPercent] = useState(false);
-    const [isEditExam, setEditExam] = useState(false);
-  
-    const cancelEditPercent = () => {
-        setEditPercent(false);
-      };
-     
-    const handleEditPercent = () => {
-      setEditPercent(true);
-      //     Formik.setFieldValue("country", user.country);
-      //     Formik.setFieldValue("eye_color", user.eye_color);
-      //     Formik.setFieldValue("hair_color", user.hair_color);
-      //     Formik.setFieldValue("height", user.height);
-      //     Formik.setFieldValue("weight", user.weight);
+    // 2. Use apiClient for all requests and fetch data efficiently
+    useEffect(() => {
+        if (!classId) return;
+
+        const fetchData = async () => {
+            try {
+                // Fetch teachers and class details in parallel
+                const [teacherResp, classResp] = await Promise.all([
+                    apiClient.get(`/teacher/fetch-with-query`, { params: {} }),
+                    apiClient.get(`/class/fetch-single/${classId}`)
+                ]);
+
+                setAllTeachers(teacherResp.data.data);
+
+                const classData = classResp.data.data;
+                if (classData && classData.attendee) {
+                    setAttendee(classData.attendee);
+                    // Pre-fill formik with the current attendee's ID
+                    Formik.setFieldValue("attendee", classData.attendee._id);
+                } else {
+                    setAttendee(null);
+                    Formik.setFieldValue("attendee", "");
+                }
+            } catch (e) {
+                console.error("Error fetching data:", e);
+                handleMessage("error", "Failed to load attendee data.");
+            }
+        };
+
+        fetchData();
+    }, [classId, isEditAttendee]); // Refetch when class changes or edit mode is toggled
+
+    const cancelEditAttendee = () => {
+        setEditAttendee(false);
     };
 
-    const initialValues = {
-        attendee:""
-      };
-      const Formik = useFormik({
-        initialValues: initialValues,
-        // validationSchema: userEditSchema,
+    const handleEditAttendee = () => {
+        setEditAttendee(true);
+    };
+
+    const Formik = useFormik({
+        initialValues: { attendee: "" },
         onSubmit: (values) => {
-          axios
-            .patch(`${baseUrl}/class/update/${classId}`, { ...values })
-            .then((resp) => {
-              handleMessage("success",resp.data.message);
-            })
-            .catch((e) => {
-              handleMessage("error",e.response.data.message);
-              console.log("Error  in submit edit", e);
-            });
+            apiClient
+                .patch(`/class/update/${classId}`, values)
+                .then((resp) => {
+                    handleMessage("success", resp.data.message);
+                    setAttendee(allTeachers.find(t => t._id === values.attendee)); // Update UI immediately
+                    cancelEditAttendee();
+                })
+                .catch((e) => {
+                    handleMessage("error", e.response?.data?.message || "Failed to update attendee.");
+                    cancelEditAttendee();
+                });
         },
-      });
-    
+    });
 
-      const [attendee, setAttendee] =useState(null)
-      const fetchAttendeeTeacher =()=>{
-        console.log("Attendee id", attendeeId)
-        if(attendeeId){
-          axios.get(`${baseUrl}/teacher/fetch-single/${attendeeId}`).then(resp=>{
-            console.log("Response", resp)
-            setAttendee(resp.data.data)
-          }).catch(e=>{
-            console.log("Error in fetching attendee teacher.")
-          })
-        }
-      
-      }
-
-      useEffect(()=>{
-       fetchAttendeeTeacher()
-      },[attendeeId])
     return (
         <>
             {isEditPercent && (

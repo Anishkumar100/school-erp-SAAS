@@ -5,137 +5,91 @@ import {
     InputLabel,
     MenuItem,
     Select,
-    Button,
-    CardMedia,
     Paper,
     TextField,
     Typography,
-    TableCell,
-    TableRow,
-    TableBody,
-    TableHead,
     Table,
+    TableBody,
+    TableCell,
     TableContainer,
-  } from "@mui/material";
-  import dayjs from "dayjs";
-  import { useFormik } from "formik";
-  import { useEffect, useState } from "react";
-  import axios from "axios";
-  import { baseUrl } from "../../../environment";
-  import CustomizedSnackbars from "../../../basic utility components/CustomizedSnackbars";
+    TableHead,
+    TableRow,
+    CircularProgress,
+} from "@mui/material";
+import { useEffect, useState } from "react";
+// 1. Import apiClient instead of axios
+import apiClient from "../../../../apiClient"; // Adjust path if needed
+import CustomizedSnackbars from "../../../basic utility components/CustomizedSnackbars";
 import { Link } from "react-router-dom";
-  
-  export default function Attendance() {
-    const [studentClass, setStudentClass] = useState([]);
+
+export default function Attendance() {
+    const [studentClasses, setStudentClasses] = useState([]);
     const [students, setStudents] = useState([]);
-    const [attendance, setAttendance] =useState([])
-  
-    
+    const [attendanceData, setAttendanceData] = useState({});
+    const [loading, setLoading] = useState(true);
     const [params, setParams] = useState({});
-    const handleClass = (e) => {
-      let newParam;
-      if (e.target.value !== "") {
-        newParam = { ...params, student_class: e.target.value };
-      } else {
-        newParam = { ...params };
-        delete newParam["student_class"];
-      }
-  
-      setParams(newParam);
-    };
-  
-    const handleSearch = (e) => {
-      let newParam;
-      if (e.target.value !== "") {
-        newParam = { ...params, search: e.target.value };
-      } else {
-        newParam = { ...params };
-        delete newParam["search"];
-      }
-  
-      setParams(newParam);
-    };
-
- 
- 
-    //   MESSAGE
     const [message, setMessage] = useState("");
-    const [type, setType] = useState("succeess");
-  
-    const resetMessage = () => {
-      setMessage("");
-    };
-  
-    
-    const fetchAttendanceData = async (studentId) => {
- 
-        Promise.resolve(await axios.get(`${baseUrl}/attendance/${studentId}`)).then(res=>{
-            console.log(res)
-            return "Hello"
-        })
+    const [type, setType] = useState("success");
 
-        // try {
-        //   const response = 
-        //   console.log(response,"attendance data")
-        //   setAttendanceData(response.data);
-        //   chartDataFunc(response.data)
-        //   setLoading(false);
-        // return 2
-        // } catch (error) {
-        //   console.error("Error fetching attendance data:", error);
-        // //   setLoading(false);
-        // }
-    }
+    const resetMessage = () => setMessage("");
 
+    // 2. Use apiClient for all requests
     useEffect(() => {
-        const fetchDetailedData = async () => {
-          try {
-            const detailedDataPromises = students.map(student => 
-              axios.get(`${baseUrl}/attendance/${student._id}`) // Fetch details for each item by id
-            );
-    
-            const detailedDataResponses = await Promise.all(detailedDataPromises);
-           
-            const detailedData = detailedDataResponses.map(response => response.data); // Extract the data from responses
-            console.log(detailedData, "Detailed Data")
-            setAttendance(detailedData); // Set the detailed data
-          } catch (error) {
-            console.error('Error fetching detailed data:', error);
-          }
+        const fetchInitialData = async () => {
+            try {
+                const classResponse = await apiClient.get(`/class/fetch-all`);
+                setStudentClasses(classResponse.data.data);
+            } catch (error) {
+                console.error("Error fetching classes:", error);
+            }
         };
-    
-        if (students.length > 0) {
-          fetchDetailedData(); // Trigger the second API call only when the initial list is ready
-        }
-      }, [students]);
+        fetchInitialData();
+    }, []);
 
-    const fetchStudentClass = () => {
-      axios
-      .get(`${baseUrl}/class/fetch-all`)
-      .then((resp) => {
-        setStudentClass(resp.data.data)
-      console.log("Class",resp.data)
-      })
-      .catch((e) => {
-        console.log("Error in fetching student Class", e);
-      });
-    };
-  
-    const fetchStudents = () => {
-      axios
-        .get(`${baseUrl}/student/fetch-with-query`, { params: params })
-        .then((resp) => {
-          console.log("Fetching data in  Students.", resp);
-          setStudents(resp.data.data);
-        })
-        .catch((e) => {
-          console.log("Error in fetching casting calls admin data", e);
-        });
-    };
     useEffect(() => {
-      fetchStudents();
-      fetchStudentClass();
-    }, [message, params]);
+        const fetchStudentsAndAttendance = async () => {
+            setLoading(true);
+            try {
+                const studentResponse = await apiClient.get(`/student/fetch-with-query`, { params });
+                const studentsList = studentResponse.data.data;
+                setStudents(studentsList);
+
+                if (studentsList.length > 0) {
+                    // Fetch attendance for all students in parallel for efficiency
+                    const attendancePromises = studentsList.map(student =>
+                        apiClient.get(`/attendance/${student._id}`)
+                    );
+                    const attendanceResults = await Promise.all(attendancePromises);
+
+                    const updatedAttendanceData = {};
+                    attendanceResults.forEach((response, index) => {
+                        const studentId = studentsList[index]._id;
+                        const records = response.data || [];
+                        const total = records.length;
+                        const present = records.filter(r => r.status === "Present").length;
+                        updatedAttendanceData[studentId] = total > 0 ? (present / total) * 100 : 0;
+                    });
+                    setAttendanceData(updatedAttendanceData);
+                }
+            } catch (error) {
+                console.error("Error fetching student or attendance data:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchStudentsAndAttendance();
+    }, [params, message]);
+
+    const handleClass = (e) => {
+        const classId = e.target.value;
+        setParams(prev => ({ ...prev, student_class: classId || undefined }));
+    };
+
+    const handleSearch = (e) => {
+        const searchTerm = e.target.value;
+        setParams(prev => ({ ...prev, search: searchTerm || undefined }));
+    };
+
     return (
       <>
         {message && (
@@ -185,8 +139,8 @@ import { Link } from "react-router-dom";
                 onChange={handleClass}
               >
                 <MenuItem value={""}>Select Class</MenuItem>
-                {studentClass &&
-                  studentClass.map((value, i) => {
+                {studentClasses &&
+                  studentClasses.map((value, i) => {
                     return (
                       <MenuItem key={i} value={value._id}>
                         {value.class_text}
