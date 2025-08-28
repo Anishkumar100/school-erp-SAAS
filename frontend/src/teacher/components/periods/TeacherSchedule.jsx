@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
-// 1. Import apiClient instead of axios
 import apiClient from '../../../../apiClient'; // Adjust path if needed
 import {
   FormControl,
@@ -35,33 +34,30 @@ const Schedule = () => {
   const [allClasses, setAllClasses] = useState([]);
   const [selectedClass, setSelectedClass] = useState('');
 
-  // Fetch all classes assigned to the teacher
-  const fetchAllClasses = () => {
-    // 2. Use apiClient for all requests
-    apiClient
-      .get(`/class/attendee`) // Fetches classes assigned to the logged-in teacher
-      .then((resp) => {
-        setAllClasses(resp.data);
-        if (resp.data.length > 0) {
-          setSelectedClass(resp.data[0].classId);
-        }
-      })
-      .catch((e) => {
-        console.error('Error in fetching assigned classes:', e);
-      });
-  };
-
   useEffect(() => {
-    fetchAllClasses();
+    const fetchTeacherClasses = () => {
+      apiClient
+        .get(`/class/attendee`)
+        .then((resp) => {
+          const classes = resp.data || [];
+          setAllClasses(classes);
+          if (classes.length > 0) {
+            setSelectedClass(classes[0].classId);
+          }
+        })
+        .catch((e) => {
+          console.error('Error in fetching assigned classes:', e);
+        });
+    };
+    fetchTeacherClasses();
   }, []);
 
-  // Fetch periods for the selected class
   useEffect(() => {
     const fetchClassPeriods = async () => {
       if (!selectedClass) return;
       try {
         const response = await apiClient.get(`/period/class/${selectedClass}`);
-        const periods = response.data.data || []; // Use .data from standardized response
+        const periods = response.data.data || [];
         const eventsData = periods.map((period) => ({
           id: period._id,
           title: `${period.subject?.subject_name || 'N/A'} By ${period.teacher?.name || 'N/A'}`,
@@ -83,24 +79,25 @@ const Schedule = () => {
 
   return (
     <Container>
-      <h2>Weekly Schedule</h2>
-  
-      {/* Class Selection Box */}
-      <Paper sx={{ margin: '10px', padding: '10px' }}>
-        <FormControl sx={{ minWidth: '220px', marginTop: '10px' }}>
-          <Typography>Change Class</Typography>
-          <Select value={selectedClass} onChange={handleClassChange}>
-            {allClasses &&
-              allClasses.map((value) => (
-                <MenuItem key={value._id} value={value._id}>
-                  {value.class_text}
-                </MenuItem>
-              ))}
+      <Typography variant="h4" sx={{ textAlign: 'center', my: 3 }}>Weekly Schedule</Typography>
+
+      <Paper sx={{ margin: '20px auto', padding: '20px', maxWidth: '400px', borderRadius: '16px' }}>
+        <FormControl fullWidth>
+          <InputLabel>Select Class</InputLabel>
+          <Select
+            value={selectedClass}
+            label="Select Class"
+            onChange={handleClassChange}
+          >
+            {allClasses.map((value) => (
+              <MenuItem key={value.classId} value={value.classId}>
+                {value.class_text}
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
       </Paper>
-  
-      {/* Calendar with rounded + zoom on hover */}
+
       <Paper
         elevation={3}
         sx={{
@@ -108,11 +105,7 @@ const Schedule = () => {
           overflow: 'hidden',
           mx: 'auto',
           my: 2,
-          width: '95%',
-          transition: 'transform 0.3s ease-in-out',
-          '&:hover': {
-            transform: 'scale(1.02)',
-          },
+          height: '600px',
         }}
       >
         <Calendar
@@ -135,7 +128,6 @@ const Schedule = () => {
       </Paper>
     </Container>
   );
-  
 };
 
 export default Schedule;

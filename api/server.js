@@ -54,8 +54,8 @@ app.get("/", (req, res) => {
 
 // Apply middleware to all necessary routes
 app.use("/api/school", schoolRouter); // School has public and private routes inside
-app.use("/api/student", authCheck, studentRouter);
-app.use("/api/teacher", authCheck, teacherRouter);
+app.use("/api/student",  studentRouter);
+app.use("/api/teacher", teacherRouter);
 app.use("/api/class", authCheck, classRouter);
 app.use("/api/subject", authCheck, subjectRouter);
 app.use("/api/examination", authCheck, examRouter);

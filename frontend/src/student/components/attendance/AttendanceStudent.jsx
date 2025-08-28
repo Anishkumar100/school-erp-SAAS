@@ -70,14 +70,14 @@ const AttendanceStudent = () => {
     );
   }
   return (
-    <Container>
+ <Container>
       <Typography variant="h4" gutterBottom>Your Attendance</Typography>
 
       <Box display="flex" flexDirection={{ xs: 'column', md: 'row' }} gap={4}>
         {/* Attendance Chart */}
         <Box >
           <Typography variant="h6">Attendance Summary</Typography>
-          <Pie style={{padding:"20px"}}  data={data} />
+          <Pie style={{padding:"20px"}}  data={pieChartData} />
         </Box>
 
         {/* Attendance List */}
